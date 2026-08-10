@@ -30,7 +30,6 @@ blueprint:
             <b>Example:</b> Joana
           selector:
             choose:
-              name: "Person Entity or Custom Name"
               choices:
                 Person Entity:
                   selector:
@@ -75,7 +74,6 @@ blueprint:
           default: Every 8 hours
           selector:
             choose:
-              name: "Frequency"
               choices:
                 Every 8 hours:
                   selector:
