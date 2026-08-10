@@ -659,7 +659,7 @@ action:
   - choose:
       - conditions:
           - condition: template
-        value_template: "{{ timeout_active | bool(false) }}"
+            value_template: "{{ timeout_active | bool(false) }}"
         sequence:
           - wait_for_trigger:
               - platform: event
