@@ -607,14 +607,17 @@ variables:
   notification_platform_choice: >-
     {{ in_notification_platform | string }}
 
-  notify_device_service: >-
+  notify_device_id: >-
     {% set raw_device = in_notify_devices %}
-    {% set device_id =
+    {{
       raw_device[0]
       if (raw_device is sequence and raw_device is not string and (raw_device | length) > 0)
       else raw_device
-    %}
-    {{
+    }}
+
+  notify_device_service: >-
+    {% set device_id = notify_device_id | string | trim %}
+    {% set mobile_entity =
       (
         device_entities(device_id)
         | select('match', '^notify\\.mobile_app_')
@@ -622,8 +625,23 @@ variables:
         | first
         | default('')
       )
-      if (device_id | string | trim) != ''
+      if device_id != ''
       else ''
+    %}
+    {% set device_name =
+      (device_attr(device_id, 'name_by_user') or device_attr(device_id, 'name') or '')
+      if device_id != ''
+      else ''
+    %}
+    {% set fallback_service =
+      ('notify.mobile_app_' ~ (device_name | slugify))
+      if (device_name | string | trim) != ''
+      else ''
+    %}
+    {{
+      mobile_entity
+      if (mobile_entity | string | trim) != ''
+      else fallback_service
     }}
 
   start_datetime_mode: >-
@@ -886,7 +904,7 @@ action:
     value_template: >-
       {{
         (in_notify_group_id | string | trim) != '' or
-        ((notify_device_service | string | trim) != '')
+        ((notify_device_id | string | trim) != '')
       }}
 
   - choose:
