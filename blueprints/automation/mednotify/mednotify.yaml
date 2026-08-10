@@ -25,6 +25,7 @@ blueprint:
           name: Person
           description: |
             Name of the person taking the medication.
+
             Example: Alex
           selector:
             text:
@@ -33,6 +34,7 @@ blueprint:
           name: Medication
           description: |
             Medication name.
+
             Example: Amoxicillin
           selector:
             text:
@@ -41,6 +43,7 @@ blueprint:
           name: Dose
           description: |
             Dose or instructions shown in the notification.
+
             Example: 1 capsule after meal
           selector:
             text:
@@ -49,6 +52,7 @@ blueprint:
           name: Start date and time
           description: |
             Date/time of the first reminder.
+
             Example: 2026-08-10 08:00
           selector:
             datetime:
@@ -57,8 +61,9 @@ blueprint:
           name: Frequency
           description: |
             Interval between reminders.
-            Example: 8 hours.
             If set to 0d 0h 0m 0s, reminders are sent once per day.
+
+            Example: 8 hours.
           default:
             days: 0
             hours: 0
@@ -77,8 +82,9 @@ blueprint:
         duration:
           name: Duration (used only when Run forever is off)
           description: |
-            Example: 3 days.
             Value 0 is valid and means only at start time.
+
+            Example: 3 days.
           default:
             days: 3
             hours: 0
@@ -98,6 +104,7 @@ blueprint:
           description: |
             Device target for notifications.
             Pick one or more mobile app devices from the dropdown.
+
             Example: Alex iPhone, Pixel 9
           selector:
             device:
@@ -110,6 +117,7 @@ blueprint:
           description: |
             If set, this overrides Device to Notify.
             Enter only the group id (without notify.).
+
             Example: family_phones
             `Optional`
           default: ""
@@ -120,6 +128,7 @@ blueprint:
           name: Notification title
           description: |
             Main title shown in the reminder.
+
             Example: Medication Reminder
           default: Medication Reminder
           selector:
@@ -138,6 +147,7 @@ blueprint:
           name: Timeout duration
           description: |
             Use 00:00:00 to disable timeout handling.
+
             Example: 1 hour
             `Optional`
           default:
@@ -151,6 +161,7 @@ blueprint:
           name: Android channel
           description: |
             Android notification channel.
+
             Example: medication_alerts
             `Optional`
           default: ""
@@ -161,6 +172,7 @@ blueprint:
           name: Android priority
           description: |
             Android push priority.
+
             Example: high
             `Optional`
           default: ""
@@ -176,6 +188,7 @@ blueprint:
           name: Android TTL in seconds
           description: |
             Time to live for Android push.
+
             Example: 0
             `Optional`
           default: ""
@@ -186,6 +199,7 @@ blueprint:
           name: Android sticky
           description: |
             Keep notification visible until interaction.
+
             `Optional`
           default: true
           selector:
@@ -195,6 +209,7 @@ blueprint:
           name: Android persistent
           description: |
             Persist notification on device.
+
             `Optional`
           default: true
           selector:
@@ -204,6 +219,7 @@ blueprint:
           name: iOS interruption level
           description: |
             iOS push interruption level.
+
             Example: time-sensitive
             `Optional`
           default: ""
@@ -221,6 +237,7 @@ blueprint:
           name: iOS sound
           description: |
             iOS notification sound file.
+
             Example: default
             `Optional`
           default: ""
@@ -237,14 +254,17 @@ blueprint:
           name: Acknowledgement actions
           description: |
             Runs when Taken is pressed.
+
             Example action:
-              `service: input_text.set_value
+              ```yaml
+              service: input_text.set_value
               target:
                 entity_id: input_text.mednotify_ack_history
               data:
                 value: >-
                   {% set timestamp = now().strftime('%Y-%m-%d %H:%M') %}
-                  {{ timestamp }} | {{ in_person }} took {{ in_dose }} of {{ in_medication }}`
+                  {{ timestamp }} | {{ in_person }} took {{ in_dose }} of {{ in_medication }}
+              ```
             `Optional`
           default: []
           selector:
@@ -254,7 +274,9 @@ blueprint:
           name: Timeout actions
           description: |
             Runs when timeout is reached.
+
             Example action:
+              ```yaml
               service: input_text.set_value
               target:
                 entity_id: input_text.mednotify_timeout_history
@@ -262,6 +284,7 @@ blueprint:
                 value: >-
                   {% set timestamp = now().strftime('%Y-%m-%d %H:%M') %}
                   {{ timestamp }} | Timeout reached for {{ in_person }}'s reminder
+              ```
             `Optional`
           default: []
           selector:
