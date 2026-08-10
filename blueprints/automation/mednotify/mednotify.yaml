@@ -169,6 +169,36 @@ blueprint:
           selector:
             text:
 
+        notification_message:
+          name: "💬 Notification message"
+          description: |
+            Custom message template.
+            Leave empty to use the default multi-line message.
+
+            Supported placeholders:
+            - {person}
+            - {dose}
+            - {medicine}
+            - {expected_time}
+            - {next_expected_time}
+            - {pill_amount}
+            - {frequency}
+            - {start_time}
+            - {title}
+            - {taken_label}
+
+            `Optional`
+          default: ""
+          selector:
+            select:
+              custom_value: true
+              mode: dropdown
+              options:
+                - ""
+                - "Has {person} took {dose} of {medicine} at {expected_time}?"
+                - "Reminder for {person}: take {dose} of {medicine} now. Next dose at {next_expected_time}."
+                - "{person} should take {pill_amount} pill(s) of {medicine} at {expected_time}."
+
         timeout:
           name: "🩻 Timeout duration"
           description: |
@@ -182,6 +212,32 @@ blueprint:
             seconds: 0
           selector:
             duration:
+
+        notification_lead_time:
+          name: "⏪ Notification lead time"
+          description: |
+            Send the reminder some time before the expected dose time.
+
+            `Optional`
+          default:
+            active_choice: Preset
+            Preset: On time
+          selector:
+            choose:
+              choices:
+                Preset:
+                  selector:
+                    select:
+                      options:
+                        - On time
+                        - 5 minutes before
+                        - 10 minutes before
+                        - 15 minutes before
+                        - 30 minutes before
+                      mode: dropdown
+                Specify:
+                  selector:
+                    time:
 
         notification_platform:
           name: "⚖️ Notification platform"
@@ -347,7 +403,9 @@ variables:
   in_notify_group_id: !input notify_group_id
   in_title: !input title
   in_taken_label: !input taken_label
+  in_notification_message: !input notification_message
   in_timeout: !input timeout
+  in_notification_lead_time: !input notification_lead_time
   in_notification_platform: !input notification_platform
   in_android_channel: !input android_channel
   in_android_priority: !input android_priority
@@ -366,6 +424,38 @@ variables:
 
   notification_platform_choice: >-
     {{ in_notification_platform | string }}
+
+  notification_lead_mode: >-
+    {{ in_notification_lead_time.active_choice if in_notification_lead_time is mapping else 'Preset' }}
+
+  notification_lead_choice: >-
+    {% if notification_lead_mode == 'Preset' %}
+      {{ in_notification_lead_time['Preset'] }}
+    {% else %}
+      Specify
+    {% endif %}
+
+  notification_lead_seconds: >-
+    {% if notification_lead_choice == 'On time' %}
+      0
+    {% elif notification_lead_choice == '5 minutes before' %}
+      300
+    {% elif notification_lead_choice == '10 minutes before' %}
+      600
+    {% elif notification_lead_choice == '15 minutes before' %}
+      900
+    {% elif notification_lead_choice == '30 minutes before' %}
+      1800
+    {% elif notification_lead_choice == 'Specify' %}
+      {% set lead_time = (in_notification_lead_time['Specify'] | string).split(':') %}
+      {{
+        (lead_time[0] | int(0)) * 3600 +
+        (lead_time[1] | int(0)) * 60 +
+        (lead_time[2] | int(0))
+      }}
+    {% else %}
+      0
+    {% endif %}
 
   start_ts: "{{ as_timestamp(in_start) | float(0) }}"
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
@@ -433,10 +523,11 @@ variables:
     {% endif %}
 
   elapsed_seconds: "{{ (now_ts - start_ts) | int(0) }}"
+  adjusted_elapsed_seconds: "{{ (elapsed_seconds | int(0)) + (notification_lead_seconds | int(0)) }}"
 
   is_in_window: >-
     {{
-      (elapsed_seconds | int(0)) >= 0 and
+      (adjusted_elapsed_seconds | int(0)) >= 0 and
       (
         (schedule_end_choice == 'Forever') or
         ((now_ts | float(0)) <= (schedule_end_ts | float(0)))
@@ -445,8 +536,8 @@ variables:
 
   is_due_now: >-
     {{
-      (elapsed_seconds | int(0)) >= 0 and
-      ((elapsed_seconds | int(0)) % (frequency_seconds_effective | int(1)) < 60)
+      (adjusted_elapsed_seconds | int(0)) >= 0 and
+      ((adjusted_elapsed_seconds | int(0)) % (frequency_seconds_effective | int(1)) < 60)
     }}
 
 condition:
@@ -458,7 +549,7 @@ action:
       scheduled_ts: >-
         {{
           (start_ts | int(0)) +
-          (((elapsed_seconds | int(0)) // (frequency_seconds_effective | int(1))) * (frequency_seconds_effective | int(1)))
+          (((adjusted_elapsed_seconds | int(0)) // (frequency_seconds_effective | int(1))) * (frequency_seconds_effective | int(1)))
         }}
       scheduled_label: "{{ scheduled_ts | timestamp_custom('%Y-%m-%d %H:%M', true) }}"
       notification_tag: >-
@@ -473,6 +564,13 @@ action:
           (in_timeout.seconds | int(0))
         }}
       timeout_active: "{{ (timeout_seconds | int(0)) > 0 }}"
+      next_scheduled_ts: "{{ (scheduled_ts | int(0)) + (frequency_seconds_effective | int(0)) }}"
+      next_scheduled_label: "{{ next_scheduled_ts | timestamp_custom('%Y-%m-%d %H:%M', true) }}"
+      start_label: "{{ start_ts | timestamp_custom('%Y-%m-%d %H:%M', true) }}"
+      pill_amount: >-
+        {% set dose_text = in_dose | string | trim %}
+        {% set first_part = (dose_text.split(' ')[0] if dose_text != '' else '') %}
+        {{ first_part }}
       notification_data_payload: >-
         {% set payload = {
           'tag': notification_tag,
@@ -504,19 +602,37 @@ action:
         {% endif %}
         {{ payload | to_json }}
       message_body: >-
-        Person: {{ person_name }}
-        Medication: {{ in_medication }}
-        Dose: {{ in_dose }}
-        Scheduled: {{ scheduled_label }}
+        {% if (in_notification_message | string | trim) == '' %}
+          Person: {{ person_name }}
+          Medication: {{ in_medication }}
+          Dose: {{ in_dose }}
+          Scheduled: {{ scheduled_label }}
+        {% else %}
+          {{
+            (in_notification_message | string)
+            | replace('{person}', person_name | string)
+            | replace('{dose}', in_dose | string)
+            | replace('{medice dose}', in_dose | string)
+            | replace('{medicine dose}', in_dose | string)
+            | replace('{medicine}', in_medication | string)
+            | replace('{medicine name}', in_medication | string)
+            | replace('{expected_time}', scheduled_label | string)
+            | replace('{next_expected_time}', next_scheduled_label | string)
+            | replace('{next_time}', next_scheduled_label | string)
+            | replace('{pill_amount}', pill_amount | string)
+            | replace('{pill_count}', pill_amount | string)
+            | replace('{frequency}', frequency_choice | string)
+            | replace('{start_time}', start_label | string)
+            | replace('{title}', in_title | string)
+            | replace('{taken_label}', in_taken_label | string)
+          }}
+        {% endif %}
 
   - condition: template
     value_template: >-
       {{
         (in_notify_group_id | string | trim) != '' or
-        (
-          in_notify_devices.device_id is defined and
-          (in_notify_devices.device_id | count > 0)
-        )
+        ((in_notify_devices | string | trim) != '')
       }}
 
   - choose:
@@ -533,7 +649,8 @@ action:
     default:
       - action: notify.notify
         continue_on_error: true
-        target: !input notify_devices
+        target:
+          device_id: !input notify_devices
         data:
           title: "{{ in_title }}"
           message: "{{ message_body }}"
@@ -571,7 +688,8 @@ action:
                     default:
                       - action: notify.notify
                         continue_on_error: true
-                        target: !input notify_devices
+                        target:
+                          device_id: !input notify_devices
                         data:
                           message: clear_notification
                           data:
@@ -599,7 +717,8 @@ action:
         default:
           - action: notify.notify
             continue_on_error: true
-            target: !input notify_devices
+            target:
+              device_id: !input notify_devices
             data:
               message: clear_notification
               data:
