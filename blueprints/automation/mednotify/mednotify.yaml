@@ -70,25 +70,19 @@ blueprint:
         frequency:
           name: Reminder interval
           description: |
-            Choose a preset interval or define a custom one.
-          default: Every 8 hours
+            Take the pill every chosen hours.
+          default:
+            active_choice: Preset
+            Preset: Every 8 hours
           selector:
             choose:
               choices:
-                Every 8 hours:
+                Preset:
                   selector:
                     select:
                       options:
                         - Every 8 hours
-                Every 12 hours:
-                  selector:
-                    select:
-                      options:
                         - Every 12 hours
-                Once every day:
-                  selector:
-                    select:
-                      options:
                         - Once every day
                 Free:
                   selector:
@@ -99,21 +93,25 @@ blueprint:
         schedule_end:
           name: Schedule end
           description: |
-            Pick forever or set a duration limit. The duration field only appears when needed.
-          default: Forever
+            Pick how long reminders should run, or specify an end date.
+          default:
+            active_choice: Preset
+            Preset: Forever
           selector:
             choose:
               choices:
-                Forever:
+                Preset:
                   selector:
                     select:
                       options:
                         - Forever
-                For a duration:
+                        - After 1 day
+                        - After 3 days
+                        - After 7 days
+                Specify:
                   selector:
-                    duration:
-                      enable_day: true
-                      enable_second: false
+                    date:
+
 
     section_notifications:
       name: "📲 Notifications"
@@ -328,8 +326,15 @@ variables:
   start_ts: "{{ as_timestamp(in_start) | float(0) }}"
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
 
+  frequency_mode: >-
+    {{ in_frequency.active_choice if in_frequency is mapping else 'Preset' }}
+
   frequency_choice: >-
-    {{ in_frequency.active_choice if in_frequency is mapping else 'Every 8 hours' }}
+    {% if frequency_mode == 'Preset' %}
+      {{ in_frequency['Preset'] }}
+    {% else %}
+      Free
+    {% endif %}
 
   frequency_seconds_raw: >-
     {% if frequency_choice == 'Every 8 hours' %}
@@ -338,8 +343,8 @@ variables:
       43200
     {% elif frequency_choice == 'Once every day' %}
       86400
-    {% elif frequency_choice == 'Free duration' %}
-      {% set duration_value = in_frequency['Free duration'] %}
+    {% elif frequency_choice == 'Free' %}
+      {% set duration_value = in_frequency['Free'] %}
       {{
         (duration_value.days | int(0)) * 86400 +
         (duration_value.hours | int(0)) * 3600 +
@@ -353,18 +358,32 @@ variables:
   frequency_seconds_effective: >-
     {{ 86400 if (frequency_seconds_raw | int(0)) == 0 else (frequency_seconds_raw | int(0)) }}
 
-  schedule_end_choice: >-
-    {{ in_schedule_end.active_choice if in_schedule_end is mapping else 'Forever' }}
+  schedule_end_mode: >-
+    {{ in_schedule_end.active_choice if in_schedule_end is mapping else 'Preset' }}
 
-  duration_seconds: >-
-    {% if schedule_end_choice == 'For a duration' %}
-      {% set duration_value = in_schedule_end['For a duration'] %}
-      {{
-        (duration_value.days | int(0)) * 86400 +
-        (duration_value.hours | int(0)) * 3600 +
-        (duration_value.minutes | int(0)) * 60 +
-        (duration_value.seconds | int(0))
-      }}
+  schedule_end_choice: >-
+    {% if schedule_end_mode == 'Preset' %}
+      {{ in_schedule_end['Preset'] }}
+    {% else %}
+      Specify
+    {% endif %}
+
+  schedule_end_seconds: >-
+    {% if schedule_end_choice == 'After 1 day' %}
+      86400
+    {% elif schedule_end_choice == 'After 3 days' %}
+      259200
+    {% elif schedule_end_choice == 'After 7 days' %}
+      604800
+    {% else %}
+      0
+    {% endif %}
+
+  schedule_end_ts: >-
+    {% if schedule_end_choice in ['After 1 day', 'After 3 days', 'After 7 days'] %}
+      {{ (start_ts | float(0)) + (schedule_end_seconds | int(0)) }}
+    {% elif schedule_end_choice == 'Specify' %}
+      {{ as_timestamp((in_schedule_end['Specify'] ~ ' 23:59:59')) | float(0) }}
     {% else %}
       0
     {% endif %}
@@ -376,7 +395,7 @@ variables:
       (elapsed_seconds | int(0)) >= 0 and
       (
         (schedule_end_choice == 'Forever') or
-        ((elapsed_seconds | int(0)) <= (duration_seconds | int(0)))
+        ((now_ts | float(0)) <= (schedule_end_ts | float(0)))
       )
     }}
 
