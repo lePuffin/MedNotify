@@ -433,7 +433,11 @@ trigger:
       %}
 
       {% set start_datetime_mode = in_start_datetime.active_choice if in_start_datetime is mapping else 'Preset' %}
-      {% set start_datetime_choice = in_start_datetime['Preset'] if start_datetime_mode == 'Preset' else 'Specify date-time' %}
+      {% set start_datetime_choice =
+        in_start_datetime['Preset']
+        if (start_datetime_mode == 'Preset' and in_start_datetime is mapping and 'Preset' in in_start_datetime)
+        else 'Specify date-time'
+      %}
 
       {% set next_hour_ts = ((((automation_enabled_ts | int(0)) // 3600) + 1) * 3600) | int(0) %}
       {% set next_quarter_hour_ts = ((((automation_enabled_ts | int(0)) // 900) + 1) * 900) | int(0) %}
@@ -450,13 +454,18 @@ trigger:
       {% endif %}
 
       {% if start_datetime_mode == 'Specify' %}
-        {% set start_ts = as_timestamp(in_start_datetime['Specify']) | float(0) %}
+        {% set start_specify = in_start_datetime['Specify'] if (in_start_datetime is mapping and 'Specify' in in_start_datetime) else now() %}
+        {% set start_ts = as_timestamp(start_specify) | float(0) %}
       {% else %}
         {% set start_ts = preset_start_ts | float(0) %}
       {% endif %}
 
       {% set notification_lead_mode = in_notification_lead_time.active_choice if in_notification_lead_time is mapping else 'Preset' %}
-      {% set notification_lead_choice = in_notification_lead_time['Preset'] if notification_lead_mode == 'Preset' else 'Specify' %}
+      {% set notification_lead_choice =
+        in_notification_lead_time['Preset']
+        if (notification_lead_mode == 'Preset' and in_notification_lead_time is mapping and 'Preset' in in_notification_lead_time)
+        else 'Specify'
+      %}
 
       {% if notification_lead_choice == 'On time' %}
         {% set notification_lead_seconds = 0 %}
@@ -469,7 +478,8 @@ trigger:
       {% elif notification_lead_choice == '30 minutes before' %}
         {% set notification_lead_seconds = 1800 %}
       {% elif notification_lead_choice == 'Specify' %}
-        {% set lead_time = (in_notification_lead_time['Specify'] | string).split(':') %}
+        {% set raw_lead_time = in_notification_lead_time['Specify'] if (in_notification_lead_time is mapping and 'Specify' in in_notification_lead_time) else '00:00:00' %}
+        {% set lead_time = (raw_lead_time | string).split(':') %}
         {% set notification_lead_seconds =
           (lead_time[0] | int(0)) * 3600 +
           (lead_time[1] | int(0)) * 60 +
@@ -488,7 +498,11 @@ trigger:
       {% set effective_notification_lead_seconds = 0 if lead_points_to_past_first_cycle else (notification_lead_seconds | int(0)) %}
 
       {% set frequency_mode = in_frequency.active_choice if in_frequency is mapping else 'Preset' %}
-      {% set frequency_choice = in_frequency['Preset'] if frequency_mode == 'Preset' else 'Free' %}
+      {% set frequency_choice =
+        in_frequency['Preset']
+        if (frequency_mode == 'Preset' and in_frequency is mapping and 'Preset' in in_frequency)
+        else 'Free'
+      %}
 
       {% if frequency_choice == 'Every 8 hours' %}
         {% set frequency_seconds_raw = 28800 %}
@@ -511,7 +525,11 @@ trigger:
       {% set frequency_seconds_effective = 86400 if (frequency_seconds_raw | int(0)) == 0 else (frequency_seconds_raw | int(0)) %}
 
       {% set schedule_end_mode = in_schedule_end.active_choice if in_schedule_end is mapping else 'Preset' %}
-      {% set schedule_end_choice = in_schedule_end['Preset'] if schedule_end_mode == 'Preset' else 'Specify' %}
+      {% set schedule_end_choice =
+        in_schedule_end['Preset']
+        if (schedule_end_mode == 'Preset' and in_schedule_end is mapping and 'Preset' in in_schedule_end)
+        else 'Specify'
+      %}
 
       {% if schedule_end_choice == 'After 1 day' %}
         {% set schedule_end_seconds = 86400 %}
@@ -526,7 +544,8 @@ trigger:
       {% if schedule_end_choice in ['After 1 day', 'After 3 days', 'After 7 days'] %}
         {% set schedule_end_ts = (start_ts | float(0)) + (schedule_end_seconds | int(0)) %}
       {% elif schedule_end_choice == 'Specify' %}
-        {% set schedule_end_ts = as_timestamp((in_schedule_end['Specify'] ~ ' 23:59:59')) | float(0) %}
+        {% set schedule_end_date = in_schedule_end['Specify'] if (in_schedule_end is mapping and 'Specify' in in_schedule_end) else now().strftime('%Y-%m-%d') %}
+        {% set schedule_end_ts = as_timestamp((schedule_end_date ~ ' 23:59:59')) | float(0) %}
       {% else %}
         {% set schedule_end_ts = 0 %}
       {% endif %}
@@ -593,13 +612,18 @@ variables:
 
   start_datetime_choice: >-
     {% if start_datetime_mode == 'Preset' %}
-      {{ in_start_datetime['Preset'] }}
+      {{ in_start_datetime['Preset'] if (in_start_datetime is mapping and 'Preset' in in_start_datetime) else 'Start now' }}
     {% else %}
       Specify date-time
     {% endif %}
 
   automation_enabled_ts: >-
-    {{ as_timestamp(states[this.entity_id].last_changed) | float(0) }}
+    {% set automation_entity_id = this.entity_id if this is defined else '' %}
+    {{
+      (as_timestamp(states[automation_entity_id].last_changed) | float(0))
+      if (automation_entity_id | string | trim) != ''
+      else (as_timestamp(now()) | float(0))
+    }}
 
   next_hour_ts: "{{ ((((automation_enabled_ts | int(0)) // 3600) + 1) * 3600) | int(0) }}"
   next_quarter_hour_ts: "{{ ((((automation_enabled_ts | int(0)) // 900) + 1) * 900) | int(0) }}"
@@ -621,7 +645,7 @@ variables:
 
   notification_lead_choice: >-
     {% if notification_lead_mode == 'Preset' %}
-      {{ in_notification_lead_time['Preset'] }}
+      {{ in_notification_lead_time['Preset'] if (in_notification_lead_time is mapping and 'Preset' in in_notification_lead_time) else 'On time' }}
     {% else %}
       Specify
     {% endif %}
@@ -638,7 +662,8 @@ variables:
     {% elif notification_lead_choice == '30 minutes before' %}
       1800
     {% elif notification_lead_choice == 'Specify' %}
-      {% set lead_time = (in_notification_lead_time['Specify'] | string).split(':') %}
+      {% set raw_lead_time = in_notification_lead_time['Specify'] if (in_notification_lead_time is mapping and 'Specify' in in_notification_lead_time) else '00:00:00' %}
+      {% set lead_time = (raw_lead_time | string).split(':') %}
       {{
         (lead_time[0] | int(0)) * 3600 +
         (lead_time[1] | int(0)) * 60 +
@@ -650,7 +675,8 @@ variables:
 
   start_ts: >-
     {% if start_datetime_mode == 'Specify' %}
-      {{ as_timestamp(in_start_datetime['Specify']) | float(0) }}
+      {% set start_specify = in_start_datetime['Specify'] if (in_start_datetime is mapping and 'Specify' in in_start_datetime) else now() %}
+      {{ as_timestamp(start_specify) | float(0) }}
     {% else %}
       {{ preset_start_ts | float(0) }}
     {% endif %}
@@ -661,7 +687,7 @@ variables:
 
   frequency_choice: >-
     {% if frequency_mode == 'Preset' %}
-      {{ in_frequency['Preset'] }}
+      {{ in_frequency['Preset'] if (in_frequency is mapping and 'Preset' in in_frequency) else 'Every 8 hours' }}
     {% else %}
       Free
     {% endif %}
@@ -693,7 +719,7 @@ variables:
 
   schedule_end_choice: >-
     {% if schedule_end_mode == 'Preset' %}
-      {{ in_schedule_end['Preset'] }}
+      {{ in_schedule_end['Preset'] if (in_schedule_end is mapping and 'Preset' in in_schedule_end) else 'Forever' }}
     {% else %}
       Specify
     {% endif %}
@@ -713,7 +739,8 @@ variables:
     {% if schedule_end_choice in ['After 1 day', 'After 3 days', 'After 7 days'] %}
       {{ (start_ts | float(0)) + (schedule_end_seconds | int(0)) }}
     {% elif schedule_end_choice == 'Specify' %}
-      {{ as_timestamp((in_schedule_end['Specify'] ~ ' 23:59:59')) | float(0) }}
+      {% set schedule_end_date = in_schedule_end['Specify'] if (in_schedule_end is mapping and 'Specify' in in_schedule_end) else now().strftime('%Y-%m-%d') %}
+      {{ as_timestamp((schedule_end_date ~ ' 23:59:59')) | float(0) }}
     {% else %}
       0
     {% endif %}
