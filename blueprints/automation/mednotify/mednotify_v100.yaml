@@ -1,0 +1,270 @@
+blueprint:
+  name: MedNotify v1
+  description: >-
+    Atomic medication reminder blueprint.
+    Scheduling -> notifying -> receiving a Taken action -> optional user-provided actions.
+  domain: automation
+  input:
+    person:
+      name: Person
+      description: Name of the person taking the medication.
+      selector:
+        text:
+
+    medication:
+      name: Medication
+      description: Medication name.
+      selector:
+        text:
+
+    dose:
+      name: Dose
+      description: Dose/instructions shown in the notification.
+      selector:
+        text:
+
+    start_datetime:
+      name: Start date and time
+      description: Date/time of the first reminder.
+      selector:
+        datetime:
+
+    frequency:
+      name: Frequency
+      description: >-
+        Interval between reminders. If set to 0d 0h 0m 0s, reminders are sent once per day.
+      default:
+        days: 0
+        hours: 8
+        minutes: 0
+        seconds: 0
+      selector:
+        duration:
+
+    run_forever:
+      name: Run forever
+      description: If enabled, reminders continue indefinitely.
+      default: true
+      selector:
+        boolean:
+
+    duration:
+      name: Duration (used only when Run forever is off)
+      description: >-
+        Length of time reminders are generated after start. 0 is valid and means only at start time.
+      default:
+        days: 3
+        hours: 0
+        minutes: 0
+        seconds: 0
+      selector:
+        duration:
+
+    notify_services:
+      name: Notification service(s)
+      description: >-
+        One or more notify services. Use YAML list format, for example:
+        ["notify.mobile_app_alice_phone", "notify.mobile_app_bob_phone"]
+      selector:
+        object:
+
+    title:
+      name: Notification title
+      description: Title for each reminder notification.
+      default: Medication Reminder
+      selector:
+        text:
+
+    taken_label:
+      name: Taken button label
+      default: Taken
+      selector:
+        text:
+
+    timeout_enabled:
+      name: Enable timeout
+      description: If disabled, reminder remains actionable until acknowledged.
+      default: false
+      selector:
+        boolean:
+
+    timeout:
+      name: Timeout duration
+      description: Used only when timeout is enabled.
+      default:
+        hours: 1
+        minutes: 0
+        seconds: 0
+      selector:
+        duration:
+
+    acknowledgement_actions:
+      name: Acknowledgement actions (optional)
+      description: Optional user-defined actions to run when Taken is pressed.
+      default: []
+      selector:
+        action: {}
+
+    timeout_actions:
+      name: Timeout actions (optional)
+      description: Optional user-defined actions to run when timeout occurs.
+      default: []
+      selector:
+        action: {}
+
+mode: parallel
+max: 100
+
+trigger:
+  - platform: time_pattern
+    minutes: "/1"
+
+variables:
+  in_person: !input person
+  in_medication: !input medication
+  in_dose: !input dose
+  in_start: !input start_datetime
+  in_frequency: !input frequency
+  in_run_forever: !input run_forever
+  in_duration: !input duration
+  in_notify_services: !input notify_services
+  in_title: !input title
+  in_taken_label: !input taken_label
+  in_timeout_enabled: !input timeout_enabled
+  in_timeout: !input timeout
+
+  start_ts: "{{ as_timestamp(in_start) | float(0) }}"
+  now_ts: "{{ as_timestamp(now()) | float(0) }}"
+
+  frequency_seconds_raw: >-
+    {{
+      (in_frequency.days | int(0)) * 86400 +
+      (in_frequency.hours | int(0)) * 3600 +
+      (in_frequency.minutes | int(0)) * 60 +
+      (in_frequency.seconds | int(0))
+    }}
+  frequency_seconds_effective: "{{ 86400 if (frequency_seconds_raw | int(0)) == 0 else (frequency_seconds_raw | int(0)) }}"
+
+  duration_seconds: >-
+    {{
+      (in_duration.days | int(0)) * 86400 +
+      (in_duration.hours | int(0)) * 3600 +
+      (in_duration.minutes | int(0)) * 60 +
+      (in_duration.seconds | int(0))
+    }}
+
+  elapsed_seconds: "{{ (now_ts - start_ts) | int(0) }}"
+
+  is_in_window: >-
+    {{
+      (elapsed_seconds | int(0)) >= 0 and
+      (
+        (in_run_forever | bool(false)) or
+        ((elapsed_seconds | int(0)) <= (duration_seconds | int(0)))
+      )
+    }}
+
+  is_due_now: >-
+    {{
+      (elapsed_seconds | int(0)) >= 0 and
+      ((elapsed_seconds | int(0)) % (frequency_seconds_effective | int(1)) < 60)
+    }}
+
+condition:
+  - condition: template
+    value_template: "{{ is_in_window and is_due_now }}"
+
+action:
+  - variables:
+      scheduled_ts: >-
+        {{
+          (start_ts | int(0)) +
+          (((elapsed_seconds | int(0)) // (frequency_seconds_effective | int(1))) * (frequency_seconds_effective | int(1)))
+        }}
+      scheduled_label: "{{ scheduled_ts | timestamp_custom('%Y-%m-%d %H:%M', true) }}"
+      notification_tag: >-
+        mednotify_{{ this.entity_id | replace('.', '_') }}_{{ (scheduled_ts | int(0)) }}
+      action_taken: >-
+        MEDNOTIFY_TAKEN_{{ this.entity_id | replace('.', '_') }}_{{ (scheduled_ts | int(0)) }}
+      timeout_seconds: >-
+        {{
+          (in_timeout.days | int(0)) * 86400 +
+          (in_timeout.hours | int(0)) * 3600 +
+          (in_timeout.minutes | int(0)) * 60 +
+          (in_timeout.seconds | int(0))
+        }}
+      notify_service_list: >-
+        {% if in_notify_services is string %}
+          {{ [in_notify_services] }}
+        {% else %}
+          {{ in_notify_services }}
+        {% endif %}
+      message_body: >-
+        Person: {{ in_person }}
+        Medication: {{ in_medication }}
+        Dose: {{ in_dose }}
+        Scheduled: {{ scheduled_label }}
+
+  - repeat:
+      for_each: "{{ notify_service_list }}"
+      sequence:
+        - action: "{{ repeat.item }}"
+          continue_on_error: true
+          data:
+            title: "{{ in_title }}"
+            message: "{{ message_body }}"
+            data:
+              tag: "{{ notification_tag }}"
+              group: "mednotify"
+              sticky: true
+              persistent: true
+              actions:
+                - action: "{{ action_taken }}"
+                  title: "{{ in_taken_label }}"
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ in_timeout_enabled | bool(false) }}"
+        sequence:
+          - wait_for_trigger:
+              - platform: event
+                event_type: mobile_app_notification_action
+                event_data:
+                  action: "{{ action_taken }}"
+            timeout:
+              seconds: "{{ timeout_seconds | int(0) }}"
+            continue_on_timeout: true
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ wait.trigger is not none }}"
+                sequence:
+                  - repeat:
+                      for_each: "{{ notify_service_list }}"
+                      sequence:
+                        - action: "{{ repeat.item }}"
+                          continue_on_error: true
+                          data:
+                            message: clear_notification
+                            data:
+                              tag: "{{ notification_tag }}"
+                  - sequence: !input acknowledgement_actions
+            default:
+              - sequence: !input timeout_actions
+    default:
+      - wait_for_trigger:
+          - platform: event
+            event_type: mobile_app_notification_action
+            event_data:
+              action: "{{ action_taken }}"
+      - repeat:
+          for_each: "{{ notify_service_list }}"
+          sequence:
+            - action: "{{ repeat.item }}"
+              continue_on_error: true
+              data:
+                message: clear_notification
+                data:
+                  tag: "{{ notification_tag }}"
+      - sequence: !input acknowledgement_actions
