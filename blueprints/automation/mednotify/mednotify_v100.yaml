@@ -4,6 +4,7 @@ blueprint:
     Atomic medication reminder blueprint.
     Scheduling -> notifying -> receiving a Taken action -> optional user-provided actions.
   domain: automation
+  source_url: https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify_v100.yaml
   input:
     person:
       name: Person

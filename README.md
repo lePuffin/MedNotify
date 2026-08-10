@@ -10,7 +10,7 @@ helper update actions.
 
 The blueprint is located at:
 
-- `blueprints/automation/mednotify/mednotify_v100.yaml`
+- [blueprints/automation/mednotify/mednotify_v100.yaml](blueprints/automation/mednotify/mednotify_v100.yaml)
 
 ## What It Implements
 
@@ -27,12 +27,12 @@ The blueprint is located at:
 
 1. In Home Assistant, import the blueprint from:
    - Repository: [lePuffin/MedNotify](https://github.com/lePuffin/MedNotify)
-   - Blueprint file: [mednotify_v100.yaml](https://github.com/lePuffin/MedNotify/blob/main/blueprints/automation/mednotify/mednotify_v100.yaml)
+   - Blueprint file (GitHub raw): [mednotify_v100.yaml](https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify_v100.yaml)
 2. Create an automation from the MedNotify blueprint.
 3. Configure:
    - Medication fields (person, medication, dose)
    - Schedule (start, frequency, duration/forever)
-   - Notification services list (for example `notify.mobile_app_lepuffin_phone`)
+   - Notification services list (for example notify.mobile_app_lepuffin_phone)
    - Optional acknowledgement and timeout actions
 
 ## Notes
