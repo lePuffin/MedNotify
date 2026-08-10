@@ -1,15 +1,14 @@
 blueprint:
   name: "💊 Medication Notification"
-  description: >-
-    💊 Medication Notification
-
-    GitHub: https://github.com/lePuffin/MedNotify
-
-    ------------------------------
+  description: |
+    <h3>💊 Medication Notification <code>v1.0.0</code></h3>
+    🐧 <p><a href="https://github.com/lePuffin/MedNotify">github</a></p>
+    <hr>
 
     Features:
     - Fixed-time medication schedule.
     - Device picker target selection.
+    - Notification Group ID override.
     - Actionable Taken button.
     - Optional timeout flow.
     - Optional helper/action hooks.
@@ -22,13 +21,13 @@ blueprint:
     section_pill:
       name: "💊 Pill Appointment"
       description: >-
-        Required fields for medication schedule.
-      collapsed: false
+        Medication schedule setup.
+      collapsed: true
       input:
         person:
           name: Person
           description: >-
-            Required. Name of the person taking the medication.
+            Name of the person taking the medication.
             Example: Alex
           selector:
             text:
@@ -36,7 +35,7 @@ blueprint:
         medication:
           name: Medication
           description: >-
-            Required. Medication name.
+            Medication name.
             Example: Amoxicillin
           selector:
             text:
@@ -44,7 +43,7 @@ blueprint:
         dose:
           name: Dose
           description: >-
-            Required. Dose or instructions shown in the notification.
+            Dose or instructions shown in the notification.
             Example: 1 capsule after meal
           selector:
             text:
@@ -52,7 +51,7 @@ blueprint:
         start_datetime:
           name: Start date and time
           description: >-
-            Required. Date/time of the first reminder.
+            Date/time of the first reminder.
             Example: 2026-08-10 08:00
           selector:
             datetime:
@@ -60,7 +59,7 @@ blueprint:
         frequency:
           name: Frequency
           description: >-
-            Required. Interval between reminders.
+            Interval between reminders.
             Example: 8 hours.
             If set to 0d 0h 0m 0s, reminders are sent once per day.
           default:
@@ -74,7 +73,7 @@ blueprint:
         run_forever:
           name: Run forever
           description: >-
-            Required. If enabled, reminders continue indefinitely.
+            If enabled, reminders continue indefinitely.
           default: true
           selector:
             boolean:
@@ -82,7 +81,6 @@ blueprint:
         duration:
           name: Duration (used only when Run forever is off)
           description: >-
-            Required when Run forever is off.
             Example: 3 days.
             Value 0 is valid and means only at start time.
           default:
@@ -102,7 +100,7 @@ blueprint:
         notify_devices:
           name: Device to Notify
           description: >-
-            Required unless Notification Group ID is used.
+            Device target for notifications.
             Pick one or more mobile app devices from the dropdown.
             Example: Alex iPhone, Pixel 9
           selector:
@@ -111,9 +109,10 @@ blueprint:
                 integration: mobile_app
 
         notify_group_id:
-          name: Notification Group ID (optional)
+          name: Notification Group ID
+                `optional`
           description: >-
-            Optional. If set, this overrides Device to Notify.
+            If set, this overrides Device to Notify.
             Enter only the group id (without notify.).
             Example: family_phones
           default: ""
@@ -123,7 +122,7 @@ blueprint:
         title:
           name: Notification title
           description: >-
-            Required. Main title shown in the reminder.
+            Main title shown in the reminder.
             Example: Medication Reminder
           default: Medication Reminder
           selector:
@@ -132,7 +131,7 @@ blueprint:
         taken_label:
           name: Taken button label
           description: >-
-            Required. Label used by the action button.
+            Label used by the action button.
             Example: Taken
           default: Taken
           selector:
@@ -141,7 +140,7 @@ blueprint:
         timeout_enabled:
           name: Enable timeout
           description: >-
-            Required. If disabled, reminder stays actionable until acknowledged.
+            If disabled, reminder stays actionable until acknowledged.
           default: false
           selector:
             boolean:
@@ -149,7 +148,7 @@ blueprint:
         timeout:
           name: Timeout duration
           description: >-
-            Required when timeout is enabled.
+            Used when timeout is enabled.
             Example: 1 hour
           default:
             hours: 1
@@ -159,18 +158,20 @@ blueprint:
             duration:
 
         android_channel:
-          name: Android channel (optional)
+          name: Android channel
+                `optional`
           description: >-
-            Optional. Android notification channel.
+            Android notification channel.
             Example: medication_alerts
           default: ""
           selector:
             text:
 
         android_priority:
-          name: Android priority (optional)
+          name: Android priority
+                `optional`
           description: >-
-            Optional. Android push priority.
+            Android push priority.
             Example: high
           default: ""
           selector:
@@ -182,34 +183,38 @@ blueprint:
                 - normal
 
         android_ttl:
-          name: Android TTL in seconds (optional)
+          name: Android TTL in seconds
+                `optional`
           description: >-
-            Optional. Time to live for Android push.
+            Time to live for Android push.
             Example: 0
           default: ""
           selector:
             text:
 
         android_sticky:
-          name: Android sticky (optional)
+          name: Android sticky
+                `optional`
           description: >-
-            Optional. Keep notification visible until interaction.
+            Keep notification visible until interaction.
           default: true
           selector:
             boolean:
 
         android_persistent:
-          name: Android persistent (optional)
+          name: Android persistent
+                `optional`
           description: >-
-            Optional. Persist notification on device.
+            Persist notification on device.
           default: true
           selector:
             boolean:
 
         ios_interruption_level:
-          name: iOS interruption level (optional)
+          name: iOS interruption level
+                `optional`
           description: >-
-            Optional. iOS push interruption level.
+            iOS push interruption level.
             Example: time-sensitive
           default: ""
           selector:
@@ -223,18 +228,20 @@ blueprint:
                 - critical
 
         ios_sound:
-          name: iOS sound (optional)
+          name: iOS sound
+                `optional`
           description: >-
-            Optional. iOS notification sound file.
+            iOS notification sound file.
             Example: default
           default: ""
           selector:
             text:
 
         notification_data_overrides:
-          name: Advanced notification data overrides (optional)
+          name: Advanced notification data overrides
+                `optional`
           description: >-
-            Optional. Extra mobile_app data merged into notification data.
+            Extra mobile_app data merged into notification data.
             Example: {"clickAction":"/lovelace/meds","url":"/lovelace/meds","color":"#1E90FF"}
           default: {}
           selector:
@@ -247,18 +254,20 @@ blueprint:
       collapsed: true
       input:
         acknowledgement_actions:
-          name: Acknowledgement actions (optional)
+          name: Acknowledgement actions
+                `optional`
           description: >-
-            Optional. Runs when Taken is pressed.
+            Runs when Taken is pressed.
             Example: set input_datetime.last_med_taken
           default: []
           selector:
             action: {}
 
         timeout_actions:
-          name: Timeout actions (optional)
+          name: Timeout actions
+                `optional`
           description: >-
-            Optional. Runs when timeout is reached.
+            Runs when timeout is reached.
             Example: increment input_number.missed_doses
           default: []
           selector:
