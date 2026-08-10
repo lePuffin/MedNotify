@@ -74,19 +74,27 @@ blueprint:
         start_mode:
           name: "🚀 Start mode"
           description: |
-            Start now uses the start anchor helper to persist the first start timestamp.
+            Start now anchors from when this automation was enabled.
+            Next 15 minutes starts at the next :15, :30 or :00 boundary.
+            Next half hour starts at the next :30 or :00 boundary.
+            Next hour starts at the next :00 boundary.
           default:
-            active_choice: Start now
+            active_choice: Preset
+            Preset: Start now
           selector:
             choose:
               choices:
-                Start now:
+                Preset:
                   selector:
                     select:
                       options:
                         - Start now
-                      mode: list
-                Specify date-time:
+                        - Next 15 minutes
+                        - Next half hour
+                        - Next hour
+                      mode: dropdown
+
+                Specify:
                   selector:
                     datetime:
 
@@ -405,16 +413,6 @@ blueprint:
           selector:
             action: {}
 
-        start_anchor_helper:
-          name: "🧭 Start anchor helper"
-          description: |
-            Input datetime helper used to persist the first start timestamp when Start mode is Start now.
-            Create an input_datetime with both date and time enabled.
-          selector:
-            entity:
-              filter:
-                - domain: input_datetime
-
 mode: parallel
 max: 100
 
@@ -428,7 +426,6 @@ variables:
   in_dose: !input dose
   in_start_datetime: !input start_datetime
   in_start_mode: !input start_mode
-  in_start_anchor_helper: !input start_anchor_helper
   in_frequency: !input frequency
   in_schedule_end: !input schedule_end
   in_notify_devices: !input notify_devices
@@ -457,15 +454,32 @@ variables:
   notification_platform_choice: >-
     {{ in_notification_platform | string }}
 
-  start_mode_choice: >-
-    {{ in_start_mode.active_choice if in_start_mode is mapping else 'Start now' }}
+  start_mode_mode: >-
+    {{ in_start_mode.active_choice if in_start_mode is mapping else 'Preset' }}
 
-  start_helper_state: "{{ states(in_start_anchor_helper) }}"
-  start_helper_ts: >-
-    {% if start_helper_state not in ['unknown', 'unavailable', 'none', 'None', ''] %}
-      {{ as_timestamp(start_helper_state) | float(0) }}
+  start_mode_choice: >-
+    {% if start_mode_mode == 'Preset' %}
+      {{ in_start_mode['Preset'] }}
     {% else %}
-      0
+      Specify date-time
+    {% endif %}
+
+  automation_enabled_ts: >-
+    {{ as_timestamp(states[this.entity_id].last_changed) | float(0) }}
+
+  next_hour_ts: "{{ ((((automation_enabled_ts | int(0)) // 3600) + 1) * 3600) | int(0) }}"
+  next_quarter_hour_ts: "{{ ((((automation_enabled_ts | int(0)) // 900) + 1) * 900) | int(0) }}"
+  next_half_hour_ts: "{{ ((((automation_enabled_ts | int(0)) // 1800) + 1) * 1800) | int(0) }}"
+
+  preset_start_ts: >-
+    {% if start_mode_choice == 'Next 15 minutes' %}
+      {{ next_quarter_hour_ts | int(0) }}
+    {% elif start_mode_choice == 'Next hour' %}
+      {{ next_hour_ts | int(0) }}
+    {% elif start_mode_choice == 'Next half hour' %}
+      {{ next_half_hour_ts | int(0) }}
+    {% else %}
+      {{ as_timestamp(now()) | int(0) }}
     {% endif %}
 
   notification_lead_mode: >-
@@ -501,12 +515,10 @@ variables:
     {% endif %}
 
   start_ts: >-
-    {% if start_mode_choice == 'Specify date-time' %}
-      {{ as_timestamp(in_start_datetime) | float(0) }}
-    {% elif (start_helper_ts | float(0)) > 0 %}
-      {{ start_helper_ts | float(0) }}
+    {% if start_mode_mode == 'Specify' %}
+      {{ as_timestamp(in_start_mode['Specify']) | float(0) }}
     {% else %}
-      {{ as_timestamp(now()) | float(0) }}
+      {{ preset_start_ts | float(0) }}
     {% endif %}
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
 
@@ -591,17 +603,6 @@ variables:
     }}
 
 action:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ start_mode_choice == 'Start now' and (start_helper_ts | float(0)) == 0 }}"
-        sequence:
-          - action: input_datetime.set_datetime
-            target:
-              entity_id: !input start_anchor_helper
-            data:
-              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-
   - condition: template
     value_template: "{{ is_in_window and is_due_now }}"
 
