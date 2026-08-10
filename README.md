@@ -23,7 +23,7 @@ Medication reminders for Home Assistant, built as an atomic blueprint.
 
 The blueprint is located at:
 
-- [blueprints/automation/mednotify/mednotify_v100.yaml](blueprints/automation/mednotify/mednotify_v100.yaml)
+- [blueprints/automation/mednotify/mednotify.yaml](blueprints/automation/mednotify/mednotify.yaml)
 
 ## What It Implements
 
@@ -40,7 +40,7 @@ The blueprint is located at:
 
 1. In Home Assistant, import the blueprint from:
    - Repository: [lePuffin/MedNotify](https://github.com/lePuffin/MedNotify)
-   - Blueprint file (GitHub raw): [mednotify_v100.yaml](https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify_v100.yaml)
+   - Blueprint file (GitHub raw): [mednotify.yaml](https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify.yaml)
 2. Create an automation from the MedNotify blueprint.
 3. Configure:
    - 💊 Pill Appointment (required schedule fields)

@@ -1,7 +1,7 @@
 blueprint:
   name: "💊 Medication Notification"
   description: |
-    <h3>💊 Medication Notification <code>v1.0.0</code></h3>
+    <h3>💊 Medication Notification <code>v1.1.0</code></h3>
     🔗<a href="https://github.com/lePuffin/MedNotify"> Github Link</a>
     <hr>
 
@@ -24,11 +24,20 @@ blueprint:
         person:
           name: Person
           description: |
-            Name of the person taking the medication.
+            Pick a Home Assistant person entity or type a custom name.
 
-            <b>Example:</b> Alex
+            <b>Example:</b> Joana
           selector:
-            text:
+            choose:
+              choices:
+                entity:
+                  selector:
+                    entity:
+                      filter:
+                        - domain: person
+                text:
+                  selector:
+                    text:
 
         medication:
           name: Medication
@@ -263,7 +272,7 @@ blueprint:
               data:
                 value: >-
                   {% set timestamp = now().strftime('%Y-%m-%d %H:%M') %}
-                  {{ timestamp }} | {{ in_person }} took {{ in_dose }} of {{ in_medication }}
+                  {{ timestamp }} | {{ person_name }} took {{ in_dose }} of {{ in_medication }}
               ```
             `Optional`
           default: []
@@ -283,7 +292,7 @@ blueprint:
               data:
                 value: >-
                   {% set timestamp = now().strftime('%Y-%m-%d %H:%M') %}
-                  {{ timestamp }} | Timeout reached for {{ in_person }}'s reminder
+                  {{ timestamp }} | Timeout reached for {{ person_name }}'s reminder
               ```
             `Optional`
           default: []
@@ -317,6 +326,13 @@ variables:
   in_android_persistent: !input android_persistent
   in_ios_interruption_level: !input ios_interruption_level
   in_ios_sound: !input ios_sound
+
+  person_name: >-
+    {% if in_person.active_choice == 'entity' %}
+      {{ state_attr(in_person.entity, 'friendly_name') or in_person.entity }}
+    {% else %}
+      {{ in_person.text }}
+    {% endif %}
 
   start_ts: "{{ as_timestamp(in_start) | float(0) }}"
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
@@ -408,7 +424,7 @@ action:
         {% endif %}
         {{ payload | to_json }}
       message_body: >-
-        Person: {{ in_person }}
+        Person: {{ person_name }}
         Medication: {{ in_medication }}
         Dose: {{ in_dose }}
         Scheduled: {{ scheduled_label }}
