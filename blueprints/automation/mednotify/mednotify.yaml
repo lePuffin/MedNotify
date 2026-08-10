@@ -65,19 +65,13 @@ blueprint:
           name: "📆 Start date and time"
           description: |
             Date/time of the first reminder.
-            Used when Start mode is Specify date-time.
 
-            <b>Example:</b> 2026-08-10 08:00
-          selector:
-            datetime:
-
-        start_mode:
-          name: "🚀 Start mode"
-          description: |
             Start now anchors from when this automation was enabled.
             Next 15 minutes starts at the next :15, :30 or :00 boundary.
             Next half hour starts at the next :30 or :00 boundary.
             Next hour starts at the next :00 boundary.
+
+            <b>Example:</b> 2026-08-10 08:00
           default:
             active_choice: Preset
             Preset: Start now
@@ -585,7 +579,19 @@ variables:
     {% endif %}
 
   elapsed_seconds: "{{ (now_ts - start_ts) | int(0) }}"
-  adjusted_elapsed_seconds: "{{ (elapsed_seconds | int(0)) + (notification_lead_seconds | int(0)) }}"
+  first_notification_ts: "{{ (start_ts | float(0)) - (notification_lead_seconds | int(0)) }}"
+
+  lead_points_to_past_first_cycle: >-
+    {{
+      (notification_lead_seconds | int(0)) > 0 and
+      (now_ts | float(0)) < (start_ts | float(0)) and
+      (now_ts | float(0)) > (first_notification_ts | float(0))
+    }}
+
+  effective_notification_lead_seconds: >-
+    {{ 0 if lead_points_to_past_first_cycle else (notification_lead_seconds | int(0)) }}
+
+  adjusted_elapsed_seconds: "{{ (elapsed_seconds | int(0)) + (effective_notification_lead_seconds | int(0)) }}"
 
   is_in_window: >-
     {{
