@@ -26,7 +26,7 @@ blueprint:
           description: |
             Name of the person taking the medication.
 
-            Example: Alex
+            <b>Example:</b> Alex
           selector:
             text:
 
@@ -35,7 +35,7 @@ blueprint:
           description: |
             Medication name.
 
-            Example: Amoxicillin
+            <b>Example:</b> Amoxicillin
           selector:
             text:
 
@@ -44,7 +44,7 @@ blueprint:
           description: |
             Dose or instructions shown in the notification.
 
-            Example: 1 capsule after meal
+            <b>Example:</b> 1 capsule after meal
           selector:
             text:
 
@@ -53,7 +53,7 @@ blueprint:
           description: |
             Date/time of the first reminder.
 
-            Example: 2026-08-10 08:00
+            <b>Example:</b> 2026-08-10 08:00
           selector:
             datetime:
 
@@ -63,7 +63,7 @@ blueprint:
             Interval between reminders.
             If set to 0d 0h 0m 0s, reminders are sent once per day.
 
-            Example: 8 hours.
+            <b>Example:</b> 8 hours.
           default:
             days: 0
             hours: 0
@@ -84,7 +84,7 @@ blueprint:
           description: |
             Value 0 is valid and means only at start time.
 
-            Example: 3 days.
+            <b>Example:</b> 3 days.
           default:
             days: 3
             hours: 0
@@ -105,7 +105,7 @@ blueprint:
             Device target for notifications.
             Pick one or more mobile app devices from the dropdown.
 
-            Example: Alex iPhone, Pixel 9
+            <b>Example:</b> Alex iPhone, Pixel 9
           selector:
             device:
               filter:
@@ -118,7 +118,7 @@ blueprint:
             If set, this overrides Device to Notify.
             Enter only the group id (without notify.).
 
-            Example: family_phones
+            <b>Example:</b> family_phones
             `Optional`
           default: ""
           selector:
@@ -129,7 +129,7 @@ blueprint:
           description: |
             Main title shown in the reminder.
 
-            Example: Medication Reminder
+            <b>Example:</b> Medication Reminder
           default: Medication Reminder
           selector:
             text:
@@ -138,7 +138,7 @@ blueprint:
           name: Taken button label
           description: |
             Label used by the action button.
-            Example: Taken
+            <b>Example:</b> Taken
           default: Taken
           selector:
             text:
@@ -148,7 +148,7 @@ blueprint:
           description: |
             Use 00:00:00 to disable timeout handling.
 
-            Example: 1 hour
+            <b>Example:</b> 1 hour
             `Optional`
           default:
             hours: 1
@@ -162,7 +162,7 @@ blueprint:
           description: |
             Android notification channel.
 
-            Example: medication_alerts
+            <b>Example:</b> medication_alerts
             `Optional`
           default: ""
           selector:
@@ -173,7 +173,7 @@ blueprint:
           description: |
             Android push priority.
 
-            Example: high
+            <b>Example:</b> high
             `Optional`
           default: ""
           selector:
@@ -189,7 +189,7 @@ blueprint:
           description: |
             Time to live for Android push.
 
-            Example: 0
+            <b>Example:</b> 0
             `Optional`
           default: ""
           selector:
@@ -220,7 +220,7 @@ blueprint:
           description: |
             iOS push interruption level.
 
-            Example: time-sensitive
+            <b>Example:</b> time-sensitive
             `Optional`
           default: ""
           selector:
@@ -238,7 +238,7 @@ blueprint:
           description: |
             iOS notification sound file.
 
-            Example: default
+            <b>Example:</b> default
             `Optional`
           default: ""
           selector:
