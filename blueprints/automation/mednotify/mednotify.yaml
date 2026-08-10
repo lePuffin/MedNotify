@@ -497,12 +497,12 @@ trigger:
       {% elif frequency_choice == 'Once every day' %}
         {% set frequency_seconds_raw = 86400 %}
       {% elif frequency_choice == 'Free' %}
-        {% set duration_value = in_frequency['Free'] %}
+        {% set duration_value = in_frequency['Free'] if (in_frequency is mapping and 'Free' in in_frequency) else {} %}
         {% set frequency_seconds_raw =
-          (duration_value.days | int(0)) * 86400 +
-          (duration_value.hours | int(0)) * 3600 +
-          (duration_value.minutes | int(0)) * 60 +
-          (duration_value.seconds | int(0))
+          ((duration_value['days'] if 'days' in duration_value else 0) | int(0)) * 86400 +
+          ((duration_value['hours'] if 'hours' in duration_value else 0) | int(0)) * 3600 +
+          ((duration_value['minutes'] if 'minutes' in duration_value else 0) | int(0)) * 60 +
+          ((duration_value['seconds'] if 'seconds' in duration_value else 0) | int(0))
         %}
       {% else %}
         {% set frequency_seconds_raw = 28800 %}
@@ -674,12 +674,12 @@ variables:
     {% elif frequency_choice == 'Once every day' %}
       86400
     {% elif frequency_choice == 'Free' %}
-      {% set duration_value = in_frequency['Free'] %}
+      {% set duration_value = in_frequency['Free'] if (in_frequency is mapping and 'Free' in in_frequency) else {} %}
       {{
-        (duration_value.days | int(0)) * 86400 +
-        (duration_value.hours | int(0)) * 3600 +
-        (duration_value.minutes | int(0)) * 60 +
-        (duration_value.seconds | int(0))
+        ((duration_value['days'] if 'days' in duration_value else 0) | int(0)) * 86400 +
+        ((duration_value['hours'] if 'hours' in duration_value else 0) | int(0)) * 3600 +
+        ((duration_value['minutes'] if 'minutes' in duration_value else 0) | int(0)) * 60 +
+        ((duration_value['seconds'] if 'seconds' in duration_value else 0) | int(0))
       }}
     {% else %}
       28800
@@ -764,11 +764,12 @@ action:
       action_taken: >-
         MEDNOTIFY_TAKEN_{{ this.entity_id | replace('.', '_') }}_{{ (scheduled_ts | int(0)) }}
       timeout_seconds: >-
+        {% set timeout_value = in_timeout if in_timeout is mapping else {} %}
         {{
-          (in_timeout.days | int(0)) * 86400 +
-          (in_timeout.hours | int(0)) * 3600 +
-          (in_timeout.minutes | int(0)) * 60 +
-          (in_timeout.seconds | int(0))
+          ((timeout_value['days'] if 'days' in timeout_value else 0) | int(0)) * 86400 +
+          ((timeout_value['hours'] if 'hours' in timeout_value else 0) | int(0)) * 3600 +
+          ((timeout_value['minutes'] if 'minutes' in timeout_value else 0) | int(0)) * 60 +
+          ((timeout_value['seconds'] if 'seconds' in timeout_value else 0) | int(0))
         }}
       timeout_active: "{{ (timeout_seconds | int(0)) > 0 }}"
       next_scheduled_ts: "{{ (scheduled_ts | int(0)) + (frequency_seconds_effective | int(0)) }}"
