@@ -419,7 +419,6 @@ variables:
   in_medication: !input medication
   in_dose: !input dose
   in_start_datetime: !input start_datetime
-  in_start_mode: !input start_mode
   in_frequency: !input frequency
   in_schedule_end: !input schedule_end
   in_notify_devices: !input notify_devices
@@ -448,12 +447,12 @@ variables:
   notification_platform_choice: >-
     {{ in_notification_platform | string }}
 
-  start_mode_mode: >-
-    {{ in_start_mode.active_choice if in_start_mode is mapping else 'Preset' }}
+  start_datetime_mode: >-
+    {{ in_start_datetime.active_choice if in_start_datetime is mapping else 'Preset' }}
 
-  start_mode_choice: >-
-    {% if start_mode_mode == 'Preset' %}
-      {{ in_start_mode['Preset'] }}
+  start_datetime_choice: >-
+    {% if start_datetime_mode == 'Preset' %}
+      {{ in_start_datetime['Preset'] }}
     {% else %}
       Specify date-time
     {% endif %}
@@ -466,11 +465,11 @@ variables:
   next_half_hour_ts: "{{ ((((automation_enabled_ts | int(0)) // 1800) + 1) * 1800) | int(0) }}"
 
   preset_start_ts: >-
-    {% if start_mode_choice == 'Next 15 minutes' %}
+    {% if start_datetime_choice == 'Next 15 minutes' %}
       {{ next_quarter_hour_ts | int(0) }}
-    {% elif start_mode_choice == 'Next hour' %}
+    {% elif start_datetime_choice == 'Next hour' %}
       {{ next_hour_ts | int(0) }}
-    {% elif start_mode_choice == 'Next half hour' %}
+    {% elif start_datetime_choice == 'Next half hour' %}
       {{ next_half_hour_ts | int(0) }}
     {% else %}
       {{ as_timestamp(now()) | int(0) }}
@@ -509,8 +508,8 @@ variables:
     {% endif %}
 
   start_ts: >-
-    {% if start_mode_mode == 'Specify' %}
-      {{ as_timestamp(in_start_mode['Specify']) | float(0) }}
+    {% if start_datetime_mode == 'Specify' %}
+      {{ as_timestamp(in_start_datetime['Specify']) | float(0) }}
     {% else %}
       {{ preset_start_ts | float(0) }}
     {% endif %}
