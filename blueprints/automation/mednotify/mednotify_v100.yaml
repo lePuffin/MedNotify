@@ -1,117 +1,268 @@
 blueprint:
-  name: MedNotify v1
+  name: "💊 Medication Notification"
   description: >-
-    Atomic medication reminder blueprint.
-    Scheduling -> notifying -> receiving a Taken action -> optional user-provided actions.
+    💊 Medication Notification
+
+    GitHub: https://github.com/lePuffin/MedNotify
+
+    ------------------------------
+
+    Features:
+    - Fixed-time medication schedule.
+    - Device picker target selection.
+    - Actionable Taken button.
+    - Optional timeout flow.
+    - Optional helper/action hooks.
+
+    Responsibility:
+    Scheduling -> notifying -> receiving an action -> optional user-defined updates.
   domain: automation
   source_url: https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify_v100.yaml
   input:
-    person:
-      name: Person
-      description: Name of the person taking the medication.
-      selector:
-        text:
-
-    medication:
-      name: Medication
-      description: Medication name.
-      selector:
-        text:
-
-    dose:
-      name: Dose
-      description: Dose/instructions shown in the notification.
-      selector:
-        text:
-
-    start_datetime:
-      name: Start date and time
-      description: Date/time of the first reminder.
-      selector:
-        datetime:
-
-    frequency:
-      name: Frequency
+    section_pill:
+      name: "💊 Pill Appointment"
       description: >-
-        Interval between reminders. If set to 0d 0h 0m 0s, reminders are sent once per day.
-      default:
-        days: 0
-        hours: 8
-        minutes: 0
-        seconds: 0
-      selector:
+        Required fields for medication schedule.
+      collapsed: false
+      input:
+        person:
+          name: Person
+          description: >-
+            Required. Name of the person taking the medication.
+            Example: Alex
+          selector:
+            text:
+
+        medication:
+          name: Medication
+          description: >-
+            Required. Medication name.
+            Example: Amoxicillin
+          selector:
+            text:
+
+        dose:
+          name: Dose
+          description: >-
+            Required. Dose or instructions shown in the notification.
+            Example: 1 capsule after meal
+          selector:
+            text:
+
+        start_datetime:
+          name: Start date and time
+          description: >-
+            Required. Date/time of the first reminder.
+            Example: 2026-08-10 08:00
+          selector:
+            datetime:
+
+        frequency:
+          name: Frequency
+          description: >-
+            Required. Interval between reminders.
+            Example: 8 hours.
+            If set to 0d 0h 0m 0s, reminders are sent once per day.
+          default:
+            days: 0
+            hours: 8
+            minutes: 0
+            seconds: 0
+          selector:
+            duration:
+
+        run_forever:
+          name: Run forever
+          description: >-
+            Required. If enabled, reminders continue indefinitely.
+          default: true
+          selector:
+            boolean:
+
         duration:
+          name: Duration (used only when Run forever is off)
+          description: >-
+            Required when Run forever is off.
+            Example: 3 days.
+            Value 0 is valid and means only at start time.
+          default:
+            days: 3
+            hours: 0
+            minutes: 0
+            seconds: 0
+          selector:
+            duration:
 
-    run_forever:
-      name: Run forever
-      description: If enabled, reminders continue indefinitely.
-      default: true
-      selector:
-        boolean:
-
-    duration:
-      name: Duration (used only when Run forever is off)
+    section_notifications:
+      name: "📲 Notifications"
       description: >-
-        Length of time reminders are generated after start. 0 is valid and means only at start time.
-      default:
-        days: 3
-        hours: 0
-        minutes: 0
-        seconds: 0
-      selector:
-        duration:
+        Delivery and mobile-platform options.
+      collapsed: true
+      input:
+        notify_devices:
+          name: Device to Notify
+          description: >-
+            Required unless Notification Group ID is used.
+            Pick one or more mobile app devices from the dropdown.
+            Example: Alex iPhone, Pixel 9
+          selector:
+            target:
+              device:
+                integration: mobile_app
 
-    notify_services:
-      name: Notification service(s)
+        notify_group_id:
+          name: Notification Group ID (optional)
+          description: >-
+            Optional. If set, this overrides Device to Notify.
+            Enter only the group id (without notify.).
+            Example: family_phones
+          default: ""
+          selector:
+            text:
+
+        title:
+          name: Notification title
+          description: >-
+            Required. Main title shown in the reminder.
+            Example: Medication Reminder
+          default: Medication Reminder
+          selector:
+            text:
+
+        taken_label:
+          name: Taken button label
+          description: >-
+            Required. Label used by the action button.
+            Example: Taken
+          default: Taken
+          selector:
+            text:
+
+        timeout_enabled:
+          name: Enable timeout
+          description: >-
+            Required. If disabled, reminder stays actionable until acknowledged.
+          default: false
+          selector:
+            boolean:
+
+        timeout:
+          name: Timeout duration
+          description: >-
+            Required when timeout is enabled.
+            Example: 1 hour
+          default:
+            hours: 1
+            minutes: 0
+            seconds: 0
+          selector:
+            duration:
+
+        android_channel:
+          name: Android channel (optional)
+          description: >-
+            Optional. Android notification channel.
+            Example: medication_alerts
+          default: ""
+          selector:
+            text:
+
+        android_priority:
+          name: Android priority (optional)
+          description: >-
+            Optional. Android push priority.
+            Example: high
+          default: ""
+          selector:
+            select:
+              custom_value: true
+              options:
+                - ""
+                - high
+                - normal
+
+        android_ttl:
+          name: Android TTL in seconds (optional)
+          description: >-
+            Optional. Time to live for Android push.
+            Example: 0
+          default: ""
+          selector:
+            text:
+
+        android_sticky:
+          name: Android sticky (optional)
+          description: >-
+            Optional. Keep notification visible until interaction.
+          default: true
+          selector:
+            boolean:
+
+        android_persistent:
+          name: Android persistent (optional)
+          description: >-
+            Optional. Persist notification on device.
+          default: true
+          selector:
+            boolean:
+
+        ios_interruption_level:
+          name: iOS interruption level (optional)
+          description: >-
+            Optional. iOS push interruption level.
+            Example: time-sensitive
+          default: ""
+          selector:
+            select:
+              custom_value: true
+              options:
+                - ""
+                - passive
+                - active
+                - time-sensitive
+                - critical
+
+        ios_sound:
+          name: iOS sound (optional)
+          description: >-
+            Optional. iOS notification sound file.
+            Example: default
+          default: ""
+          selector:
+            text:
+
+        notification_data_overrides:
+          name: Advanced notification data overrides (optional)
+          description: >-
+            Optional. Extra mobile_app data merged into notification data.
+            Example: {"clickAction":"/lovelace/meds","url":"/lovelace/meds","color":"#1E90FF"}
+          default: {}
+          selector:
+            object:
+
+    section_helpers:
+      name: "🧩 Helpers"
       description: >-
-        One or more notify services. Use YAML list format, for example:
-        ["notify.mobile_app_alice_phone", "notify.mobile_app_bob_phone"]
-      selector:
-        object:
+        Optional user-managed helper or action hooks.
+      collapsed: true
+      input:
+        acknowledgement_actions:
+          name: Acknowledgement actions (optional)
+          description: >-
+            Optional. Runs when Taken is pressed.
+            Example: set input_datetime.last_med_taken
+          default: []
+          selector:
+            action: {}
 
-    title:
-      name: Notification title
-      description: Title for each reminder notification.
-      default: Medication Reminder
-      selector:
-        text:
-
-    taken_label:
-      name: Taken button label
-      default: Taken
-      selector:
-        text:
-
-    timeout_enabled:
-      name: Enable timeout
-      description: If disabled, reminder remains actionable until acknowledged.
-      default: false
-      selector:
-        boolean:
-
-    timeout:
-      name: Timeout duration
-      description: Used only when timeout is enabled.
-      default:
-        hours: 1
-        minutes: 0
-        seconds: 0
-      selector:
-        duration:
-
-    acknowledgement_actions:
-      name: Acknowledgement actions (optional)
-      description: Optional user-defined actions to run when Taken is pressed.
-      default: []
-      selector:
-        action: {}
-
-    timeout_actions:
-      name: Timeout actions (optional)
-      description: Optional user-defined actions to run when timeout occurs.
-      default: []
-      selector:
-        action: {}
+        timeout_actions:
+          name: Timeout actions (optional)
+          description: >-
+            Optional. Runs when timeout is reached.
+            Example: increment input_number.missed_doses
+          default: []
+          selector:
+            action: {}
 
 mode: parallel
 max: 100
@@ -128,11 +279,20 @@ variables:
   in_frequency: !input frequency
   in_run_forever: !input run_forever
   in_duration: !input duration
-  in_notify_services: !input notify_services
+  in_notify_devices: !input notify_devices
+  in_notify_group_id: !input notify_group_id
   in_title: !input title
   in_taken_label: !input taken_label
   in_timeout_enabled: !input timeout_enabled
   in_timeout: !input timeout
+  in_android_channel: !input android_channel
+  in_android_priority: !input android_priority
+  in_android_ttl: !input android_ttl
+  in_android_sticky: !input android_sticky
+  in_android_persistent: !input android_persistent
+  in_ios_interruption_level: !input ios_interruption_level
+  in_ios_sound: !input ios_sound
+  in_notification_data_overrides: !input notification_data_overrides
 
   start_ts: "{{ as_timestamp(in_start) | float(0) }}"
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
@@ -194,34 +354,70 @@ action:
           (in_timeout.minutes | int(0)) * 60 +
           (in_timeout.seconds | int(0))
         }}
-      notify_service_list: >-
-        {% if in_notify_services is string %}
-          {{ [in_notify_services] }}
-        {% else %}
-          {{ in_notify_services }}
+      notification_data_payload: >-
+        {% set payload = {
+          'tag': notification_tag,
+          'group': 'mednotify',
+          'sticky': in_android_sticky,
+          'persistent': in_android_persistent,
+          'actions': [{'action': action_taken, 'title': in_taken_label}]
+        } %}
+        {% if (in_android_channel | string | trim) != '' %}
+          {% set payload = dict(payload, channel=(in_android_channel | string | trim)) %}
         {% endif %}
+        {% if (in_android_priority | string | trim) != '' %}
+          {% set payload = dict(payload, priority=(in_android_priority | string | trim)) %}
+        {% endif %}
+        {% if (in_android_ttl | string | trim) != '' %}
+          {% set payload = dict(payload, ttl=(in_android_ttl | int(0))) %}
+        {% endif %}
+        {% set push = {} %}
+        {% if (in_ios_interruption_level | string | trim) != '' %}
+          {% set push = dict(push, interruption_level=(in_ios_interruption_level | string | trim)) %}
+        {% endif %}
+        {% if (in_ios_sound | string | trim) != '' %}
+          {% set push = dict(push, sound=(in_ios_sound | string | trim)) %}
+        {% endif %}
+        {% if push | length > 0 %}
+          {% set payload = dict(payload, push=push) %}
+        {% endif %}
+        {% set overrides = in_notification_data_overrides if in_notification_data_overrides is mapping else {} %}
+        {{ (payload | combine(overrides, recursive=True)) | to_json }}
       message_body: >-
         Person: {{ in_person }}
         Medication: {{ in_medication }}
         Dose: {{ in_dose }}
         Scheduled: {{ scheduled_label }}
 
-  - repeat:
-      for_each: "{{ notify_service_list }}"
-      sequence:
-        - action: "{{ repeat.item }}"
-          continue_on_error: true
-          data:
-            title: "{{ in_title }}"
-            message: "{{ message_body }}"
+  - condition: template
+    value_template: >-
+      {{
+        (in_notify_group_id | string | trim) != '' or
+        (
+          in_notify_devices.device_id is defined and
+          (in_notify_devices.device_id | count > 0)
+        )
+      }}
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ (in_notify_group_id | string | trim) != '' }}"
+        sequence:
+          - action: "{{ 'notify.' ~ (in_notify_group_id | string | trim) }}"
+            continue_on_error: true
             data:
-              tag: "{{ notification_tag }}"
-              group: "mednotify"
-              sticky: true
-              persistent: true
-              actions:
-                - action: "{{ action_taken }}"
-                  title: "{{ in_taken_label }}"
+              title: "{{ in_title }}"
+              message: "{{ message_body }}"
+              data: "{{ notification_data_payload | from_json }}"
+    default:
+      - action: notify.notify
+        continue_on_error: true
+        target: !input notify_devices
+        data:
+          title: "{{ in_title }}"
+          message: "{{ message_body }}"
+          data: "{{ notification_data_payload | from_json }}"
 
   - choose:
       - conditions:
@@ -241,15 +437,25 @@ action:
                   - condition: template
                     value_template: "{{ wait.trigger is not none }}"
                 sequence:
-                  - repeat:
-                      for_each: "{{ notify_service_list }}"
-                      sequence:
-                        - action: "{{ repeat.item }}"
-                          continue_on_error: true
-                          data:
-                            message: clear_notification
+                  - choose:
+                      - conditions:
+                          - condition: template
+                            value_template: "{{ (in_notify_group_id | string | trim) != '' }}"
+                        sequence:
+                          - action: "{{ 'notify.' ~ (in_notify_group_id | string | trim) }}"
+                            continue_on_error: true
                             data:
-                              tag: "{{ notification_tag }}"
+                              message: clear_notification
+                              data:
+                                tag: "{{ notification_tag }}"
+                    default:
+                      - action: notify.notify
+                        continue_on_error: true
+                        target: !input notify_devices
+                        data:
+                          message: clear_notification
+                          data:
+                            tag: "{{ notification_tag }}"
                   - sequence: !input acknowledgement_actions
             default:
               - sequence: !input timeout_actions
@@ -259,13 +465,23 @@ action:
             event_type: mobile_app_notification_action
             event_data:
               action: "{{ action_taken }}"
-      - repeat:
-          for_each: "{{ notify_service_list }}"
-          sequence:
-            - action: "{{ repeat.item }}"
-              continue_on_error: true
-              data:
-                message: clear_notification
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ (in_notify_group_id | string | trim) != '' }}"
+            sequence:
+              - action: "{{ 'notify.' ~ (in_notify_group_id | string | trim) }}"
+                continue_on_error: true
                 data:
-                  tag: "{{ notification_tag }}"
+                  message: clear_notification
+                  data:
+                    tag: "{{ notification_tag }}"
+        default:
+          - action: notify.notify
+            continue_on_error: true
+            target: !input notify_devices
+            data:
+              message: clear_notification
+              data:
+                tag: "{{ notification_tag }}"
       - sequence: !input acknowledgement_actions

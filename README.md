@@ -1,10 +1,23 @@
-# MedNotify
+# 💊 Medication Notification
 
-MedNotify is a Home Assistant automation Blueprint for medication reminders.
+Medication reminders for Home Assistant, built as an atomic blueprint.
 
-It schedules reminders from a fixed start time and interval, sends actionable notifications,
-accepts a Taken action, supports optional timeout handling, and can run optional user-provided
-helper update actions.
+[GitHub Repository](https://github.com/lePuffin/MedNotify)
+
+---
+
+## Features
+
+- Fixed schedule from start date and time.
+- Recurring frequency with daily fallback when frequency is zero.
+- Duration window or forever mode.
+- Device picker for notification targets.
+- Notification Group ID override support.
+- Actionable Taken button.
+- Android and iOS notification options.
+- Optional timeout handling without altering schedule cadence.
+- Optional acknowledgement and timeout action hooks.
+- No built-in database or dashboard management.
 
 ## Blueprint
 
@@ -18,7 +31,7 @@ The blueprint is located at:
 - Start date/time based schedule.
 - Recurring frequency, with zero frequency meaning daily reminders.
 - Finite duration or forever mode.
-- One or more notification targets (provided as notify services).
+- One or more notification targets (selected as devices).
 - Actionable Taken button.
 - Optional timeout handling without changing schedule cadence.
 - Optional acknowledgement and timeout action hooks for user-managed helpers.
@@ -30,10 +43,12 @@ The blueprint is located at:
    - Blueprint file (GitHub raw): [mednotify_v100.yaml](https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify_v100.yaml)
 2. Create an automation from the MedNotify blueprint.
 3. Configure:
-   - Medication fields (person, medication, dose)
-   - Schedule (start, frequency, duration/forever)
-   - Notification services list (for example notify.mobile_app_lepuffin_phone)
-   - Optional acknowledgement and timeout actions
+   - 💊 Pill Appointment (required schedule fields)
+   - 📲 Notifications (required delivery fields + optional Android/iOS fields)
+   - 🧩 Helpers (optional acknowledgement/timeout actions)
+4. Optional behavior details:
+   - Notification Group ID is optional and overrides selected devices when provided.
+   - Optional fields are marked as optional in the blueprint descriptions and include examples.
 
 ## Notes
 
