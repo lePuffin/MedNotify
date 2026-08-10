@@ -31,12 +31,13 @@ blueprint:
           selector:
             choose:
               choices:
-                Use Home Assistant person entity:
+                description: Use Home Assistant person entity or type a custom name.
+                Person Entity:
                   selector:
                     entity:
                       filter:
                         - domain: person
-                Use custom text:
+                Custom Name:
                   selector:
                     text:
 
@@ -178,22 +179,12 @@ blueprint:
                       fields:
                         android_channel:
                           label: Android channel
-                          description: |
-                            Android notification channel.
-
-                            <b>Example:</b> medication_alerts
-                            `Optional`
                           required: false
                           selector:
                             text:
 
                         android_priority:
                           label: Android priority
-                          description: |
-                            Android push priority.
-
-                            <b>Example:</b> high
-                            `Optional`
                           required: false
                           selector:
                             select:
@@ -205,31 +196,18 @@ blueprint:
 
                         android_ttl:
                           label: Android TTL in seconds
-                          description: |
-                            Time to live for Android push.
-
-                            <b>Example:</b> 0
-                            `Optional`
                           required: false
                           selector:
                             text:
 
                         android_sticky:
                           label: Android sticky
-                          description: |
-                            Keep notification visible until interaction.
-
-                            `Optional`
                           required: false
                           selector:
                             boolean:
 
                         android_persistent:
                           label: Android persistent
-                          description: |
-                            Persist notification on device.
-
-                            `Optional`
                           required: false
                           selector:
                             boolean:
@@ -240,11 +218,6 @@ blueprint:
                       fields:
                         ios_interruption_level:
                           label: iOS interruption level
-                          description: |
-                            iOS push interruption level.
-
-                            <b>Example:</b> time-sensitive
-                            `Optional`
                           required: false
                           selector:
                             select:
@@ -258,11 +231,6 @@ blueprint:
 
                         ios_sound:
                           label: iOS sound
-                          description: |
-                            iOS notification sound file.
-
-                            <b>Example:</b> default
-                            `Optional`
                           required: false
                           selector:
                             text:
