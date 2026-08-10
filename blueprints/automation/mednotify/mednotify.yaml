@@ -28,6 +28,8 @@ blueprint:
             The choice label below tells the blueprint which input to use.
 
             <b>Example:</b> Joana
+          default:
+            active_choice: Person Entity
           selector:
             choose:
               choices:
@@ -84,6 +86,7 @@ blueprint:
                         - Every 8 hours
                         - Every 12 hours
                         - Once every day
+                      mode: dropdown
                 Free:
                   selector:
                     duration:
@@ -108,6 +111,7 @@ blueprint:
                         - After 1 day
                         - After 3 days
                         - After 7 days
+                      mode: dropdown
                 Specify:
                   selector:
                     date:
@@ -181,70 +185,70 @@ blueprint:
           name: Notification platform
           description: |
             Choose Android or iOS to show the matching platform fields.
+          default:
+            active_choice: Android
           selector:
             choose:
               choices:
                 Android:
                   selector:
-                    object:
-                      fields:
-                        android_channel:
-                          label: Android channel
-                          required: false
-                          selector:
-                            text:
-
-                        android_priority:
-                          label: Android priority
-                          required: false
-                          selector:
-                            select:
-                              custom_value: true
-                              options:
-                                - ""
-                                - high
-                                - normal
-
-                        android_ttl:
-                          label: Android TTL in seconds
-                          required: false
-                          selector:
-                            text:
-
-                        android_sticky:
-                          label: Android sticky
-                          required: false
-                          selector:
-                            boolean:
-
-                        android_persistent:
-                          label: Android persistent
-                          required: false
-                          selector:
-                            boolean:
+                    select:
+                      options:
+                        - Android
 
                 iOS:
                   selector:
-                    object:
-                      fields:
-                        ios_interruption_level:
-                          label: iOS interruption level
-                          required: false
-                          selector:
-                            select:
-                              custom_value: true
-                              options:
-                                - ""
-                                - passive
-                                - active
-                                - time-sensitive
-                                - critical
+                    select:
+                      options:
+                        - iOS
 
-                        ios_sound:
-                          label: iOS sound
-                          required: false
-                          selector:
-                            text:
+        android_channel:
+          name: Android channel
+          selector:
+            text:
+
+        android_priority:
+          name: Android priority
+          selector:
+            select:
+              custom_value: true
+              options:
+                - high
+                - normal
+
+        android_ttl:
+          name: Android TTL in seconds
+          selector:
+            text:
+
+        android_sticky:
+          name: Android sticky
+          default: true
+          selector:
+            boolean:
+
+        android_persistent:
+          name: Android persistent
+          default: true
+          selector:
+            boolean:
+
+        ios_interruption_level:
+          name: iOS interruption level
+          default: ""
+          selector:
+            select:
+              custom_value: true
+              options:
+                - passive
+                - active
+                - time-sensitive
+                - critical
+
+        ios_sound:
+          name: iOS sound
+          selector:
+            text:
 
     section_helpers:
       name: "🧩 Helpers (optional)"
@@ -312,6 +316,13 @@ variables:
   in_taken_label: !input taken_label
   in_timeout: !input timeout
   in_notification_platform: !input notification_platform
+  in_android_channel: !input android_channel
+  in_android_priority: !input android_priority
+  in_android_ttl: !input android_ttl
+  in_android_sticky: !input android_sticky
+  in_android_persistent: !input android_persistent
+  in_ios_interruption_level: !input ios_interruption_level
+  in_ios_sound: !input ios_sound
 
   person_name: >-
     {% if in_person.active_choice == 'Use Home Assistant person entity' %}
@@ -436,25 +447,23 @@ action:
           'actions': [{'action': action_taken, 'title': in_taken_label}]
         } %}
         {% if notification_platform_choice == 'Android' %}
-          {% set android = in_notification_platform[notification_platform_choice] %}
-          {% set payload = dict(payload, sticky=android.android_sticky, persistent=android.android_persistent) %}
-          {% if (android.android_channel | string | trim) != '' %}
-            {% set payload = dict(payload, channel=(android.android_channel | string | trim)) %}
+          {% set payload = dict(payload, sticky=in_android_sticky, persistent=in_android_persistent) %}
+          {% if (in_android_channel | string | trim) != '' %}
+            {% set payload = dict(payload, channel=(in_android_channel | string | trim)) %}
           {% endif %}
-          {% if (android.android_priority | string | trim) != '' %}
-            {% set payload = dict(payload, priority=(android.android_priority | string | trim)) %}
+          {% if (in_android_priority | string | trim) != '' %}
+            {% set payload = dict(payload, priority=(in_android_priority | string | trim)) %}
           {% endif %}
-          {% if (android.android_ttl | string | trim) != '' %}
-            {% set payload = dict(payload, ttl=(android.android_ttl | int(0))) %}
+          {% if (in_android_ttl | string | trim) != '' %}
+            {% set payload = dict(payload, ttl=(in_android_ttl | int(0))) %}
           {% endif %}
         {% elif notification_platform_choice == 'iOS' %}
-          {% set ios = in_notification_platform[notification_platform_choice] %}
           {% set push = {} %}
-          {% if (ios.ios_interruption_level | string | trim) != '' %}
-            {% set push = dict(push, interruption_level=(ios.ios_interruption_level | string | trim)) %}
+          {% if (in_ios_interruption_level | string | trim) != '' %}
+            {% set push = dict(push, interruption_level=(in_ios_interruption_level | string | trim)) %}
           {% endif %}
-          {% if (ios.ios_sound | string | trim) != '' %}
-            {% set push = dict(push, sound=(ios.ios_sound | string | trim)) %}
+          {% if (in_ios_sound | string | trim) != '' %}
+            {% set push = dict(push, sound=(in_ios_sound | string | trim)) %}
           {% endif %}
           {% if push | length > 0 %}
             {% set payload = dict(payload, push=push) %}
