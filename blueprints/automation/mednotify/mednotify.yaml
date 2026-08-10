@@ -607,6 +607,25 @@ variables:
   notification_platform_choice: >-
     {{ in_notification_platform | string }}
 
+  notify_device_service: >-
+    {% set raw_device = in_notify_devices %}
+    {% set device_id =
+      raw_device[0]
+      if (raw_device is sequence and raw_device is not string and (raw_device | length) > 0)
+      else raw_device
+    %}
+    {{
+      (
+        device_entities(device_id)
+        | select('match', '^notify\\.mobile_app_')
+        | list
+        | first
+        | default('')
+      )
+      if (device_id | string | trim) != ''
+      else ''
+    }}
+
   start_datetime_mode: >-
     {{ in_start_datetime.active_choice if in_start_datetime is mapping else 'Preset' }}
 
@@ -867,7 +886,7 @@ action:
     value_template: >-
       {{
         (in_notify_group_id | string | trim) != '' or
-        ((in_notify_devices | string | trim) != '')
+        ((notify_device_service | string | trim) != '')
       }}
 
   - choose:
@@ -882,14 +901,17 @@ action:
               message: "{{ message_body }}"
               data: "{{ notification_data_payload | from_json }}"
     default:
-      - action: notify.notify
-        continue_on_error: true
-        target:
-          device_id: !input notify_devices
-        data:
-          title: "{{ in_title }}"
-          message: "{{ message_body }}"
-          data: "{{ notification_data_payload | from_json }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ (notify_device_service | string | trim) != '' }}"
+            sequence:
+              - action: "{{ notify_device_service }}"
+                continue_on_error: true
+                data:
+                  title: "{{ in_title }}"
+                  message: "{{ message_body }}"
+                  data: "{{ notification_data_payload | from_json }}"
 
   - choose:
       - conditions: "{{ timeout_active | bool(false) }}"
@@ -919,14 +941,17 @@ action:
                               data:
                                 tag: "{{ notification_tag }}"
                     default:
-                      - action: notify.notify
-                        continue_on_error: true
-                        target:
-                          device_id: !input notify_devices
-                        data:
-                          message: clear_notification
-                          data:
-                            tag: "{{ notification_tag }}"
+                      - choose:
+                          - conditions:
+                              - condition: template
+                                value_template: "{{ (notify_device_service | string | trim) != '' }}"
+                            sequence:
+                              - action: "{{ notify_device_service }}"
+                                continue_on_error: true
+                                data:
+                                  message: clear_notification
+                                  data:
+                                    tag: "{{ notification_tag }}"
                   - sequence: !input acknowledgement_actions
             default:
               - sequence: !input timeout_actions
@@ -948,12 +973,15 @@ action:
                   data:
                     tag: "{{ notification_tag }}"
         default:
-          - action: notify.notify
-            continue_on_error: true
-            target:
-              device_id: !input notify_devices
-            data:
-              message: clear_notification
-              data:
-                tag: "{{ notification_tag }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ (notify_device_service | string | trim) != '' }}"
+                sequence:
+                  - action: "{{ notify_device_service }}"
+                    continue_on_error: true
+                    data:
+                      message: clear_notification
+                      data:
+                        tag: "{{ notification_tag }}"
       - sequence: !input acknowledgement_actions
