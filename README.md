@@ -15,7 +15,7 @@ Medication reminders for Home Assistant, built as an atomic blueprint.
 - Notification Group ID override support.
 - Actionable Taken button.
 - Android and iOS notification options.
-- Optional timeout handling without altering schedule cadence.
+- Optional timeout handling using 00:00:00 as the disable value.
 - Optional acknowledgement and timeout action hooks.
 - No built-in database or dashboard management.
 
@@ -48,6 +48,7 @@ The blueprint is located at:
    - 🧩 Helpers (optional acknowledgement/timeout actions)
 4. Optional behavior details:
    - Notification Group ID is optional and overrides selected devices when provided.
+   - Timeout uses 00:00:00 to disable timeout handling.
    - Optional fields are marked as optional in the blueprint descriptions and include examples.
 
 ## Notes

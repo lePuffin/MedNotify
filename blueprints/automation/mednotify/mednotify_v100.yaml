@@ -1,10 +1,11 @@
 blueprint:
   name: "💊 Medication Notification"
   description: |
-    <h3>💊 Medication Notification <code>v1.0.0</code></h3> | 🔗<a href="https://github.com/lePuffin/MedNotify"> Github Link</a>
+    <h3>💊 Medication Notification <code>v1.0.0</code></h3>
+    🔗<a href="https://github.com/lePuffin/MedNotify"> Github Link</a>
     <hr>
 
-    Features:
+    <b>Features:</b>
     - Fixed-time medication schedule.
     - Device picker target selection.
     - Notification Group ID override.
@@ -23,35 +24,35 @@ blueprint:
         person:
           name: Person
           description: 'Name of the person taking the medication.
-            Example: Alex'
+            \nExample: Alex'
           selector:
             text:
 
         medication:
           name: Medication
           description: 'Medication name.
-            Example: Amoxicillin'
+            \nExample: Amoxicillin'
           selector:
             text:
 
         dose:
           name: Dose
           description: 'Dose or instructions shown in the notification.
-            Example: 1 capsule after meal'
+            \nExample: 1 capsule after meal'
           selector:
             text:
 
         start_datetime:
           name: Start date and time
           description: 'Date/time of the first reminder.
-            Example: 2026-08-10 08:00'
+            \nExample: 2026-08-10 08:00'
           selector:
             datetime:
 
         frequency:
           name: Frequency
           description: 'Interval between reminders.
-            Example: 8 hours.
+            \nExample: 8 hours.
             If set to 0d 0h 0m 0s, reminders are sent once per day.'
           default:
             days: 0
@@ -70,7 +71,7 @@ blueprint:
 
         duration:
           name: Duration (used only when Run forever is off)
-          description: 'Example: 3 days.
+          description: '\nExample: 3 days.
             Value 0 is valid and means only at start time.'
           default:
             days: 3
@@ -90,18 +91,19 @@ blueprint:
           name: Device to Notify
           description: 'Device target for notifications.
             Pick one or more mobile app devices from the dropdown.
-            Example: Alex iPhone, Pixel 9'
+            \nExample: Alex iPhone, Pixel 9'
           selector:
-            target:
-              device:
-                integration: mobile_app
+            device:
+              filter:
+              - integration: mobile_app
+              multiple: false
 
         notify_group_id:
           name: Notification Group ID
           description: 'If set, this overrides Device to Notify.
             Enter only the group id (without notify.).
-            Example: family_phones
-            `optional`'
+            \nExample: family_phones
+            \n`Optional`'
           default: ""
           selector:
             text:
@@ -109,7 +111,7 @@ blueprint:
         title:
           name: Notification title
           description: 'Main title shown in the reminder.
-            Example: Medication Reminder'
+            \nExample: Medication Reminder'
           default: Medication Reminder
           selector:
             text:
@@ -117,23 +119,16 @@ blueprint:
         taken_label:
           name: Taken button label
           description: 'Label used by the action button.
-            Example: Taken'
+            \nExample: Taken'
           default: Taken
           selector:
             text:
 
-        timeout_enabled:
-          name: Enable timeout
-          description: 'If disabled, reminder stays actionable until acknowledged.'
-          default: false
-          selector:
-            boolean:
-
         timeout:
           name: Timeout duration
-          description: 'Used when timeout is enabled.
-            Example: 1 hour
-            `optional`'
+          description: 'Use 00:00:00 to disable timeout handling.
+            \nExample: 1 hour
+            \n`Optional`'
           default:
             hours: 1
             minutes: 0
@@ -144,8 +139,8 @@ blueprint:
         android_channel:
           name: Android channel
           description: 'Android notification channel.
-            Example: medication_alerts
-            `optional`'
+            \nExample: medication_alerts
+            \n`Optional`'
           default: ""
           selector:
             text:
@@ -153,8 +148,8 @@ blueprint:
         android_priority:
           name: Android priority
           description: 'Android push priority.
-            Example: high
-            `optional`'
+            \nExample: high
+            \n`Optional`'
           default: ""
           selector:
             select:
@@ -168,8 +163,8 @@ blueprint:
           name: Android TTL in seconds
           description:
             'Time to live for Android push.
-            Example: 0
-            `optional`'
+            \nExample: 0
+            \n`Optional`'
           default: ""
           selector:
             text:
@@ -177,7 +172,7 @@ blueprint:
         android_sticky:
           name: Android sticky
           description: 'Keep notification visible until interaction.
-            `optional`'
+            \n`Optional`'
           default: true
           selector:
             boolean:
@@ -185,7 +180,7 @@ blueprint:
         android_persistent:
           name: Android persistent
           description: 'Persist notification on device.
-            `optional`'
+            \n`Optional`'
           default: true
           selector:
             boolean:
@@ -193,8 +188,8 @@ blueprint:
         ios_interruption_level:
           name: iOS interruption level
           description: 'iOS push interruption level.
-            Example: time-sensitive
-            `optional`'
+            \nExample: time-sensitive
+            \n`Optional`'
           default: ""
           selector:
             select:
@@ -209,8 +204,8 @@ blueprint:
         ios_sound:
           name: iOS sound
           description: 'iOS notification sound file.
-            Example: default
-            `optional`'
+            \nExample: default
+            \n`Optional`'
           default: ""
           selector:
             text:
@@ -218,8 +213,8 @@ blueprint:
         notification_data_overrides:
           name: Advanced notification data overrides
           description: 'Extra mobile_app data merged into notification data.
-            Example: {"clickAction":"/lovelace/meds","url":"/lovelace/meds","color":"#1E90FF"}
-            `optional`'
+            \nExample: {"clickAction":"/lovelace/meds","url":"/lovelace/meds","color":"#1E90FF"}
+            \n`Optional`'
           default: {}
           selector:
             object:
@@ -233,8 +228,8 @@ blueprint:
         acknowledgement_actions:
           name: Acknowledgement actions
           description: 'Runs when Taken is pressed.
-            Example: set input_datetime.last_med_taken
-            `optional`'
+            \nExample: set input_datetime.last_med_taken
+            \n`Optional`'
           default: []
           selector:
             action: {}
@@ -242,8 +237,8 @@ blueprint:
         timeout_actions:
           name: Timeout actions
           description: 'Runs when timeout is reached.
-            Example: increment input_number.missed_doses
-            `optional`'
+            \nExample: increment input_number.missed_doses
+            \n`Optional`'
           default: []
           selector:
             action: {}
@@ -267,7 +262,6 @@ variables:
   in_notify_group_id: !input notify_group_id
   in_title: !input title
   in_taken_label: !input taken_label
-  in_timeout_enabled: !input timeout_enabled
   in_timeout: !input timeout
   in_android_channel: !input android_channel
   in_android_priority: !input android_priority
@@ -338,6 +332,7 @@ action:
           (in_timeout.minutes | int(0)) * 60 +
           (in_timeout.seconds | int(0))
         }}
+          timeout_active: "{{ (timeout_seconds | int(0)) > 0 }}"
       notification_data_payload: >-
         {% set payload = {
           'tag': notification_tag,
@@ -406,7 +401,7 @@ action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ in_timeout_enabled | bool(false) }}"
+        value_template: "{{ timeout_active | bool(false) }}"
         sequence:
           - wait_for_trigger:
               - platform: event
