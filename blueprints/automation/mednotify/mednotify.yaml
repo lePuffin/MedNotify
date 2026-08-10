@@ -65,10 +65,30 @@ blueprint:
           name: "📆 Start date and time"
           description: |
             Date/time of the first reminder.
+            Used when Start mode is Specify date-time.
 
             <b>Example:</b> 2026-08-10 08:00
           selector:
             datetime:
+
+        start_mode:
+          name: "🚀 Start mode"
+          description: |
+            Start now uses the start anchor helper to persist the first start timestamp.
+          default:
+            active_choice: Start now
+          selector:
+            choose:
+              choices:
+                Start now:
+                  selector:
+                    select:
+                      options:
+                        - Start now
+                      mode: list
+                Specify date-time:
+                  selector:
+                    datetime:
 
         frequency:
           name: "🕜 Reminder interval"
@@ -385,6 +405,16 @@ blueprint:
           selector:
             action: {}
 
+        start_anchor_helper:
+          name: "🧭 Start anchor helper"
+          description: |
+            Input datetime helper used to persist the first start timestamp when Start mode is Start now.
+            Create an input_datetime with both date and time enabled.
+          selector:
+            entity:
+              filter:
+                - domain: input_datetime
+
 mode: parallel
 max: 100
 
@@ -396,7 +426,9 @@ variables:
   in_person: !input person
   in_medication: !input medication
   in_dose: !input dose
-  in_start: !input start_datetime
+  in_start_datetime: !input start_datetime
+  in_start_mode: !input start_mode
+  in_start_anchor_helper: !input start_anchor_helper
   in_frequency: !input frequency
   in_schedule_end: !input schedule_end
   in_notify_devices: !input notify_devices
@@ -424,6 +456,17 @@ variables:
 
   notification_platform_choice: >-
     {{ in_notification_platform | string }}
+
+  start_mode_choice: >-
+    {{ in_start_mode.active_choice if in_start_mode is mapping else 'Start now' }}
+
+  start_helper_state: "{{ states(in_start_anchor_helper) }}"
+  start_helper_ts: >-
+    {% if start_helper_state not in ['unknown', 'unavailable', 'none', 'None', ''] %}
+      {{ as_timestamp(start_helper_state) | float(0) }}
+    {% else %}
+      0
+    {% endif %}
 
   notification_lead_mode: >-
     {{ in_notification_lead_time.active_choice if in_notification_lead_time is mapping else 'Preset' }}
@@ -457,7 +500,14 @@ variables:
       0
     {% endif %}
 
-  start_ts: "{{ as_timestamp(in_start) | float(0) }}"
+  start_ts: >-
+    {% if start_mode_choice == 'Specify date-time' %}
+      {{ as_timestamp(in_start_datetime) | float(0) }}
+    {% elif (start_helper_ts | float(0)) > 0 %}
+      {{ start_helper_ts | float(0) }}
+    {% else %}
+      {{ as_timestamp(now()) | float(0) }}
+    {% endif %}
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
 
   frequency_mode: >-
@@ -540,11 +590,21 @@ variables:
       ((adjusted_elapsed_seconds | int(0)) % (frequency_seconds_effective | int(1)) < 60)
     }}
 
-condition:
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ start_mode_choice == 'Start now' and (start_helper_ts | float(0)) == 0 }}"
+        sequence:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: !input start_anchor_helper
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
   - condition: template
     value_template: "{{ is_in_window and is_due_now }}"
 
-action:
   - variables:
       scheduled_ts: >-
         {{
