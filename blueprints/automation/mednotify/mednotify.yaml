@@ -411,8 +411,8 @@ mode: parallel
 max: 100
 
 trigger:
-  - platform: time_pattern
-    minutes: "/1"
+  - platform: template
+    value_template: "{{ is_in_window and is_due_now }}"
 
 variables:
   in_person: !input person
@@ -608,9 +608,6 @@ variables:
     }}
 
 action:
-  - condition: template
-    value_template: "{{ is_in_window and is_due_now }}"
-
   - variables:
       scheduled_ts: >-
         {{
