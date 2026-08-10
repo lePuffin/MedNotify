@@ -17,12 +17,13 @@ blueprint:
   source_url: https://raw.githubusercontent.com/lePuffin/MedNotify/main/blueprints/automation/mednotify/mednotify_v100.yaml
   input:
     section_pill:
-      name: "💊 Pill Appointment"
+      name: "Medication Appointment"
       description: 'Medication schedule setup.'
+      icon: mdi:medical-bag
       collapsed: true
       input:
         person:
-          name: Person
+          name: "👤 Person"
           description: |
             Pick a Home Assistant person entity or type a custom name.
             The choice label below tells the blueprint which input to use.
@@ -43,7 +44,7 @@ blueprint:
                     text:
 
         medication:
-          name: Medication
+          name: "🩺 Medication"
           description: |
             Medication name.
 
@@ -52,7 +53,7 @@ blueprint:
             text:
 
         dose:
-          name: Dose
+          name: "⚗️ Dose"
           description: |
             Dose or instructions shown in the notification.
 
@@ -61,7 +62,7 @@ blueprint:
             text:
 
         start_datetime:
-          name: Start date and time
+          name: "📆 Start date and time"
           description: |
             Date/time of the first reminder.
 
@@ -70,7 +71,7 @@ blueprint:
             datetime:
 
         frequency:
-          name: Reminder interval
+          name: "🕜 Reminder interval"
           description: |
             Take the pill every chosen hours.
           default:
@@ -87,14 +88,14 @@ blueprint:
                         - Every 12 hours
                         - Once every day
                       mode: dropdown
-                Free:
+                Specify:
                   selector:
                     duration:
                       enable_day: true
                       enable_second: false
 
         schedule_end:
-          name: Schedule end
+          name: "📋 Schedule end"
           description: |
             Pick how long reminders should run, or specify an end date.
           default:
@@ -116,15 +117,15 @@ blueprint:
                   selector:
                     date:
 
-
     section_notifications:
-      name: "📲 Notifications"
+      name: "Notifications"
       description: >-
         Delivery and mobile-platform options.
+      icon: mdi:message-badge-outline
       collapsed: true
       input:
         notify_devices:
-          name: Device to Notify
+          name: "📲 Device to Notify"
           description: |
             Device target for notifications.
             Pick one or more mobile app devices from the dropdown.
@@ -137,7 +138,7 @@ blueprint:
               multiple: false
 
         notify_group_id:
-          name: Notification Group ID
+          name: "🔖 Notification Group ID"
           description: |
             If set, this overrides Device to Notify.
             Enter only the group id (without notify.).
@@ -149,7 +150,7 @@ blueprint:
             text:
 
         title:
-          name: Notification title
+          name: "🪪 Notification title"
           description: |
             Main title shown in the reminder.
 
@@ -159,16 +160,17 @@ blueprint:
             text:
 
         taken_label:
-          name: Taken button label
+          name: "✅ Confirmation button label"
           description: |
             Label used by the action button.
+            
             <b>Example:</b> Taken
           default: Taken
           selector:
             text:
 
         timeout:
-          name: Timeout duration
+          name: "🩻 Timeout duration"
           description: |
             Use 00:00:00 to disable timeout handling.
 
@@ -182,60 +184,84 @@ blueprint:
             duration:
 
         notification_platform:
-          name: Notification platform
+          name: "⚖️ Notification platform"
           description: |
-            Choose Android or iOS to show the matching platform fields.
-          default:
-            active_choice: Android
-          selector:
-            choose:
-              choices:
-                Android:
-                  selector:
-                    select:
-                      options:
-                        - Android
+            Select the mobile platform for this automation.
 
-                iOS:
-                  selector:
-                    select:
-                      options:
-                        - iOS
+            `Optional`
+          default: Android
+          selector:
+            select:
+              options:
+                - Android
+                - iOS
+              mode: list
 
         android_channel:
-          name: Android channel
+          name: "📡 Android channel"
+          description: |
+            Android notification channel.
+
+            <b>Example:</b> medication_alerts
+            `Optional`
+          default: ""
           selector:
             text:
 
         android_priority:
-          name: Android priority
+          name: "⚠️ Android priority"
+          description: |
+            Android notification priority.
+
+            <b>Example:</b> high
+            `Optional`
+          default: "normal"
           selector:
             select:
               custom_value: true
               options:
-                - high
                 - normal
+                - high
 
         android_ttl:
-          name: Android TTL in seconds
+          name: "⏱️ Android TTL in seconds"
+          description: |
+            Android push time-to-live in seconds.
+
+            <b>Example:</b> 0
+            `Optional`
+          default: "0"
           selector:
             text:
 
         android_sticky:
-          name: Android sticky
+          name: "📌 Android sticky"
+          description: |
+            Keep the notification visible until user interaction.
+
+            `Optional`
           default: true
           selector:
             boolean:
 
         android_persistent:
-          name: Android persistent
+          name: "🧷 Android persistent"
+          description: |
+            Keep the notification persistent on Android.
+
+            `Optional`
           default: true
           selector:
             boolean:
 
         ios_interruption_level:
-          name: iOS interruption level
-          default: ""
+          name: "🚨 iOS interruption level"
+          description: |
+            iOS interruption level for push notifications.
+
+            <b>Example:</b> time-sensitive
+            `Optional`
+          default: "time-sensitive"
           selector:
             select:
               custom_value: true
@@ -246,22 +272,29 @@ blueprint:
                 - critical
 
         ios_sound:
-          name: iOS sound
+          name: "🔔 iOS sound"
+          description: |
+            iOS notification sound.
+
+            <b>Example:</b> default
+            `Optional`
+          default: "default"
           selector:
             text:
 
     section_helpers:
-      name: "🧩 Helpers (optional)"
+      name: "Helpers (optional)"
       description: >-
         User-managed helper or action hooks.
+      icon: mdi:invoice-text-fast-outline
       collapsed: true
       input:
         acknowledgement_actions:
-          name: Acknowledgement actions
+          name: "📈 Acknowledgement actions"
           description: |
             Runs when Taken is pressed.
 
-            Example action:
+            <b>Example action:</b>
               ```yaml
               service: input_text.set_value
               target:
@@ -277,11 +310,11 @@ blueprint:
             action: {}
 
         timeout_actions:
-          name: Timeout actions
+          name: "📉 Timeout actions"
           description: |
             Runs when timeout is reached.
 
-            Example action:
+            <b>Example action:</b>
               ```yaml
               service: input_text.set_value
               target:
@@ -325,14 +358,14 @@ variables:
   in_ios_sound: !input ios_sound
 
   person_name: >-
-    {% if in_person.active_choice == 'Use Home Assistant person entity' %}
+    {% if in_person.active_choice == 'Person Entity' %}
       {{ state_attr(in_person.entity, 'friendly_name') or in_person.entity }}
     {% else %}
       {{ in_person.text }}
     {% endif %}
 
   notification_platform_choice: >-
-    {{ in_notification_platform.active_choice if in_notification_platform is mapping else '' }}
+    {{ in_notification_platform | string }}
 
   start_ts: "{{ as_timestamp(in_start) | float(0) }}"
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
