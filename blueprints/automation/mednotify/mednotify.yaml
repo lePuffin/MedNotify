@@ -30,7 +30,7 @@ blueprint:
             <b>Example:</b> Joana
           selector:
             choose:
-              description: Home Assistant person entity or custom name.
+              name: "Person Entity or Custom Name"
               choices:
                 Person Entity:
                   selector:
@@ -69,19 +69,34 @@ blueprint:
             datetime:
 
         frequency:
-          name: Frequency
+          name: Reminder interval
           description: |
-            Interval between reminders.
-            If set to 0d 0h 0m 0s, reminders are sent once per day.
-
-            <b>Example:</b> 8 hours.
-          default:
-            days: 0
-            hours: 0
-            minutes: 0
-            seconds: 0
+            Choose a preset interval or define a custom one.
+          default: Every 8 hours
           selector:
-            duration:
+            choose:
+              name: "Frequency"
+              choices:
+                Every 8 hours:
+                  selector:
+                    select:
+                      options:
+                        - Every 8 hours
+                Every 12 hours:
+                  selector:
+                    select:
+                      options:
+                        - Every 12 hours
+                Once every day:
+                  selector:
+                    select:
+                      options:
+                        - Once every day
+                Free:
+                  selector:
+                    duration:
+                      enable_day: true
+                      enable_second: false
 
         schedule_end:
           name: Schedule end
@@ -315,14 +330,30 @@ variables:
   start_ts: "{{ as_timestamp(in_start) | float(0) }}"
   now_ts: "{{ as_timestamp(now()) | float(0) }}"
 
+  frequency_choice: >-
+    {{ in_frequency.active_choice if in_frequency is mapping else 'Every 8 hours' }}
+
   frequency_seconds_raw: >-
-    {{
-      (in_frequency.days | int(0)) * 86400 +
-      (in_frequency.hours | int(0)) * 3600 +
-      (in_frequency.minutes | int(0)) * 60 +
-      (in_frequency.seconds | int(0))
-    }}
-  frequency_seconds_effective: "{{ 86400 if (frequency_seconds_raw | int(0)) == 0 else (frequency_seconds_raw | int(0)) }}"
+    {% if frequency_choice == 'Every 8 hours' %}
+      28800
+    {% elif frequency_choice == 'Every 12 hours' %}
+      43200
+    {% elif frequency_choice == 'Once every day' %}
+      86400
+    {% elif frequency_choice == 'Free duration' %}
+      {% set duration_value = in_frequency['Free duration'] %}
+      {{
+        (duration_value.days | int(0)) * 86400 +
+        (duration_value.hours | int(0)) * 3600 +
+        (duration_value.minutes | int(0)) * 60 +
+        (duration_value.seconds | int(0))
+      }}
+    {% else %}
+      28800
+    {% endif %}
+
+  frequency_seconds_effective: >-
+    {{ 86400 if (frequency_seconds_raw | int(0)) == 0 else (frequency_seconds_raw | int(0)) }}
 
   schedule_end_choice: >-
     {{ in_schedule_end.active_choice if in_schedule_end is mapping else 'Forever' }}
