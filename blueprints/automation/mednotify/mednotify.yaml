@@ -573,10 +573,16 @@ variables:
   in_ios_sound: !input ios_sound
 
   person_name: >-
-    {% if in_person.active_choice == 'Person Entity' %}
-      {{ state_attr(in_person.entity, 'friendly_name') or in_person.entity }}
+    {% if in_person is mapping %}
+      {% set person_choice = in_person.active_choice | default('Person Entity') %}
+      {% if person_choice == 'Person Entity' %}
+        {% set person_entity = in_person['Person Entity'] if 'Person Entity' in in_person else (in_person.entity if in_person.entity is defined else '') %}
+        {{ state_attr(person_entity, 'friendly_name') or person_entity }}
+      {% else %}
+        {{ in_person['Custom Name'] if 'Custom Name' in in_person else (in_person.text if in_person.text is defined else '') }}
+      {% endif %}
     {% else %}
-      {{ in_person.text }}
+      {{ in_person }}
     {% endif %}
 
   notification_platform_choice: >-
