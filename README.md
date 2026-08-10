@@ -27,7 +27,7 @@ The blueprint is located at:
 
 1. In Home Assistant, import the blueprint from:
    - Repository: [lePuffin/MedNotify](https://github.com/lePuffin/MedNotify)
-   - Blueprint file: [mednotify_v100.yaml](https://github.com/lePuffin/MedNotify/blob/main/blueprints/automation/mednotify/mednotify_v1.yaml)
+   - Blueprint file: [mednotify_v100.yaml](https://github.com/lePuffin/MedNotify/blob/main/blueprints/automation/mednotify/mednotify_v100.yaml)
 2. Create an automation from the MedNotify blueprint.
 3. Configure:
    - Medication fields (person, medication, dose)
